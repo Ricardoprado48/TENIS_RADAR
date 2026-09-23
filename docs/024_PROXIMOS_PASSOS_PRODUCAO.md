@@ -68,33 +68,56 @@ O repositório agora possui um ponto de restauração confiável e auditável pa
 
 ## 4. Gemini Vision (Extração Visual de Odds)
 
-### 4.1 Facilidade de Integração
-A adição de um `GeminiVisionProvider` é de **baixa complexidade e baixíssimo risco**. A arquitetura do Lote F em `src/screenshot_parser/` foi concebida sob o princípio de inversão de dependência através do protocolo abstrato `ScreenshotVisionProvider` (`src/screenshot_parser/providers.py`).
+### 4.1 Implementação Realizada
+O provedor **`GeminiVisionProvider`** foi implementado com sucesso em `src/screenshot_parser/gemini_provider.py`, seguindo rigorosamente a interface `ScreenshotVisionProvider` (Protocol) e a filosofia de baixo acoplamento e dependência zero de SDKs adicionais (usando `requests` via REST direto com JSON mode).
 
-### 4.2 Arquivos Necessários para Modificação
+### 4.2 Arquivos Criados e Modificados
 1. **[NOVO] `src/screenshot_parser/gemini_provider.py`**:
-   - Implementa a interface `ScreenshotVisionProvider`.
-   - Utiliza a biblioteca `requests` (já instalada) para chamar a API REST do Google Gemini (`v1beta/models/{model}:generateContent`).
-   - Converte a imagem local (`PNG/JPEG/WEBP`) para base64 inline e envia o mesmo prompt estruturado já validado em `anthropic_provider.py`.
-   - Mapeia o JSON de resposta para a lista de `RawReading`.
+   - Implementa `GeminiVisionProvider` com método `extract(image_path: Path, context: ExtractionContext) -> ProviderExtraction`.
+   - Utiliza a API REST oficial v1beta (`models/{model}:generateContent`) enviando imagem base64 (`inlineData`) e `generationConfig.responseMimeType="application/json"`.
+   - Mantém o mesmo contrato semântico de prompt da Anthropic, extraindo exclusivamente `aces_player`, `total_aces_match` e `total_games` (Over/Under).
+   - Suporta tanto `"confidence"` quanto `"source_confidence"` na resposta estruturada.
+   - Trata explicitamente timeouts (`ProviderTimeoutError`), falhas de autenticação e rede (`ProviderUnavailableError`) e respostas fora de schema / vazias (`ProviderResponseError`).
 2. **`src/screenshot_parser/config.py`**:
-   - Adicionar variáveis: `GEMINI_API_KEY_ENV_VAR = "GEMINI_API_KEY"` e `DEFAULT_GEMINI_MODEL = "gemini-2.5-flash"`.
+   - Adicionadas constantes:
+     - `GEMINI_API_KEY_ENV_VAR = "GEMINI_API_KEY"`
+     - `GEMINI_MODEL_ENV_VAR = "GEMINI_MODEL"`
+     - `DEFAULT_GEMINI_MODEL = "gemini-2.5-flash"`
+     - `GEMINI_GENERATE_CONTENT_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"`
+     - `SUPPORTED_VISION_PROVIDERS = ("anthropic", "gemini")`
 3. **`src/screenshot_parser/providers.py`**:
-   - Na fábrica `get_provider(name)`, adicionar a resolução:
-     ```python
-     elif resolved == "gemini":
-         from .gemini_provider import GeminiVisionProvider
-         return GeminiVisionProvider()
-     ```
+   - Atualizada a fábrica `get_provider(name)` para suportar `gemini` além de `anthropic`.
+   - Política *fail-fast*: se `TENNIS_RADAR_VISION_PROVIDER` for inválido (ex.: `"openai"`), lança `ProviderUnavailableError` imediatamente, sem fallback silencioso.
 4. **`tests/test_screenshot_parser.py`**:
-   - Adicionar testes de unidade simulando a resposta da API do Gemini via `unittest.mock` (sem requisições reais à rede).
+   - Adicionados testes de unidade mockados cobrindo:
+     1. Seleção do provider `gemini` via env var;
+     2. Seleção do provider `anthropic` via env var;
+     3. Nome inválido de provider levantando `ProviderUnavailableError`;
+     4. `GEMINI_API_KEY` ausente;
+     5. `GEMINI_MODEL` aplicado (default `gemini-2.5-flash` ou valor explícito);
+     6. Extração de `aces_player`;
+     7. Extração de `total_aces_match`;
+     8. Extração de `total_games`;
+     9. Resposta inválida / não-JSON / candidatos vazios;
+     10. Timeout mapeado para `ProviderTimeoutError`;
+     11. Erros HTTP (401, 403, 429, 500, 400);
+     12. Nenhum mercado encontrado (retorna lista vazia sem inventar dados);
+     13. Metadados de auditoria (`provider="gemini"`, `model="gemini-2.5-flash"`).
 
-### 4.3 Acoplamento com Anthropic
-**Inexistente no domínio da aplicação.** Os módulos de validação estrutural (`validator.py`), armazenamento (`storage.py`, `extraction_storage.py`), pareamento de apostas (`mapping.py`) e regras operacionais (`src/odds/screenshot_evaluation.py`) trabalham exclusivamente com as estruturas neutras `RawReading`, `ExtractionResult` e `ExtractionContext`. O código da Anthropic vive isolado em seu próprio arquivo.
+### 4.3 Acoplamento e Governança
+* **Isolamento Completo:** Os módulos `validator.py`, `storage.py`, `extractor.py` e `screenshot_evaluation.py` continuam 100% agnósticos ao provedor de IA.
+* **Sem Fallback Silencioso:** Se o usuário selecionar `TENNIS_RADAR_VISION_PROVIDER=gemini` e ocorrer falha de autenticação ou cota, o sistema propaga o erro explicitamente, evitando cobranças surpresa ou comportamento indeterminado.
 
-### 4.4 Estratégia de Provedores Recomendada
-* **Seleção Explícita via Configuração/Ambiente (`TENNIS_RADAR_VISION_PROVIDER`):** Permitir alternar entre `"gemini"` e `"anthropic"`.
-* **Sem Fallback Automático Silencioso:** Respeitar a regra de governança do projeto ("falhar cedo e com clareza"). Se o usuário configurar o Gemini e a requisição falhar (ex.: cota ou chave inválida), a API deve responder explicitamente `503 Service Unavailable` ou `504 Gateway Timeout`. Fallbacks automáticos entre provedores comerciais com precificações e latências distintas geram comportamento imprevisível e mascaram falhas de configuração.
+### 4.4 Modelo Default Escolhido
+* **`gemini-2.5-flash`**: Modelo de produção Geralmente Disponível (GA) desde junho de 2025 (sem data de encerramento prevista), com suporte nativo a visão multimodal, baixa latência, suporte a `responseMimeType="application/json"` e custo muito inferior ao Claude 3.5 Sonnet. Facilmente alterável via variável `GEMINI_MODEL`.
+
+### 4.5 Resultado dos Testes
+* **Testes de unidade de screenshot:** 60/60 aprovados (`Ran 60 tests in 0.147s, OK`).
+* **Testes de integração de screenshot:** 51/51 aprovados (`Ran 51 tests in 275s, OK`).
+* **Frontend Vitest:** 76/76 aprovados (`Duration 15.38s, OK`).
+* **Build de produção:** `tsc -b && vite build` concluído com sucesso (`built in 1.37s`).
+* **Teste Real com Print em Disco:** Declarado como **pendente**, pois a máquina local não possui a variável `GEMINI_API_KEY` configurada no ambiente nem screenshots salvos em `data/raw/bookmaker_screenshots/`. O sistema está pronto para ser testado com chamadas reais assim que o usuário definir `GEMINI_API_KEY`.
+
 
 ---
 

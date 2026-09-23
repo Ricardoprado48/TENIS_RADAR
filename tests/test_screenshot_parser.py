@@ -197,7 +197,22 @@ class TestGetProvider(unittest.TestCase):
             provider = providers.get_provider()
         self.assertEqual(provider.name, "anthropic")
 
-    def test_unknown_provider_name_raises_unavailable(self) -> None:
+    def test_provider_selected_is_gemini(self) -> None:
+        with patch.dict("os.environ", {"TENNIS_RADAR_VISION_PROVIDER": "gemini"}):
+            provider = providers.get_provider()
+        self.assertEqual(provider.name, "gemini")
+
+    def test_provider_selected_is_anthropic(self) -> None:
+        with patch.dict("os.environ", {"TENNIS_RADAR_VISION_PROVIDER": "anthropic"}):
+            provider = providers.get_provider()
+        self.assertEqual(provider.name, "anthropic")
+
+    def test_invalid_provider_name_raises_unavailable(self) -> None:
+        with patch.dict("os.environ", {"TENNIS_RADAR_VISION_PROVIDER": "invalid-provider"}):
+            with self.assertRaises(ProviderUnavailableError):
+                providers.get_provider()
+
+    def test_unknown_provider_argument_raises_unavailable(self) -> None:
         with self.assertRaises(ProviderUnavailableError):
             providers.get_provider("not-a-real-provider")
 
@@ -314,5 +329,211 @@ class TestAnthropicVisionProvider(unittest.TestCase):
         self.assertEqual(len(result.readings), 1)
 
 
+class TestGeminiVisionProvider(unittest.TestCase):
+    def setUp(self) -> None:
+        self._env_patcher = patch.dict(
+            "os.environ",
+            {"GEMINI_API_KEY": "test-gemini-key"},
+        )
+        self._env_patcher.start()
+        self.addCleanup(self._env_patcher.stop)
+
+    def _extract(self, image_path, context=None):
+        from src.screenshot_parser.gemini_provider import GeminiVisionProvider
+
+        provider = GeminiVisionProvider()
+        context = context or ExtractionContext(match_context=_CONTEXT, tab_type="ACES")
+        return provider.extract(image_path, context)
+
+    def test_missing_api_key_raises_unavailable(self) -> None:
+        from src.screenshot_parser.gemini_provider import GeminiVisionProvider
+
+        with patch.dict("os.environ", {"GEMINI_API_KEY": ""}):
+            provider = GeminiVisionProvider()
+            with self.assertRaises(ProviderUnavailableError):
+                provider.extract(_png_path(), ExtractionContext(match_context=None, tab_type="ACES"))
+
+    def test_empty_model_raises_unavailable(self) -> None:
+        from src.screenshot_parser.gemini_provider import GeminiVisionProvider
+
+        with patch.dict("os.environ", {"GEMINI_MODEL": "   "}):
+            provider = GeminiVisionProvider()
+            with self.assertRaises(ProviderUnavailableError):
+                provider.extract(_png_path(), ExtractionContext(match_context=None, tab_type="ACES"))
+
+    def test_default_model_applied(self) -> None:
+        from src.screenshot_parser.gemini_provider import GeminiVisionProvider
+
+        with patch.dict("os.environ", {}, clear=False):
+            import os
+
+            os.environ.pop("GEMINI_MODEL", None)
+            provider = GeminiVisionProvider()
+            self.assertEqual(provider._model, "gemini-2.5-flash")
+
+    def test_custom_model_applied(self) -> None:
+        from src.screenshot_parser.gemini_provider import GeminiVisionProvider
+
+        with patch.dict("os.environ", {"GEMINI_MODEL": "gemini-1.5-pro"}):
+            provider = GeminiVisionProvider()
+            self.assertEqual(provider._model, "gemini-1.5-pro")
+
+    def test_timeout_is_mapped(self) -> None:
+        with patch("requests.post", side_effect=requests.Timeout()):
+            with self.assertRaises(ProviderTimeoutError):
+                self._extract(_png_path())
+
+    def test_connection_error_is_mapped_to_unavailable(self) -> None:
+        with patch("requests.post", side_effect=requests.ConnectionError()):
+            with self.assertRaises(ProviderUnavailableError):
+                self._extract(_png_path())
+
+    def test_auth_error_is_mapped_to_unavailable(self) -> None:
+        for code in (401, 403):
+            with patch("requests.post", return_value=_fake_response(code)):
+                with self.assertRaises(ProviderUnavailableError):
+                    self._extract(_png_path())
+
+    def test_rate_limit_is_mapped_to_unavailable(self) -> None:
+        with patch("requests.post", return_value=_fake_response(429)):
+            with self.assertRaises(ProviderUnavailableError):
+                self._extract(_png_path())
+
+    def test_server_error_is_mapped_to_unavailable(self) -> None:
+        with patch("requests.post", return_value=_fake_response(500)):
+            with self.assertRaises(ProviderUnavailableError):
+                self._extract(_png_path())
+
+    def test_bad_request_is_mapped_to_response_error(self) -> None:
+        with patch("requests.post", return_value=_fake_response(400, text="Bad request")):
+            with self.assertRaises(ProviderResponseError):
+                self._extract(_png_path())
+
+    def test_non_json_body_is_response_error(self) -> None:
+        with patch("requests.post", return_value=_fake_response(200, None)):
+            with self.assertRaises(ProviderResponseError):
+                self._extract(_png_path())
+
+    def test_empty_candidates_is_response_error(self) -> None:
+        body = {"candidates": [], "promptFeedback": {"blockReason": "SAFETY"}}
+        with patch("requests.post", return_value=_fake_response(200, body)):
+            with self.assertRaises(ProviderResponseError):
+                self._extract(_png_path())
+
+    def test_empty_text_is_response_error(self) -> None:
+        body = {"candidates": [{"content": {"parts": [{"text": "   "}]}}]}
+        with patch("requests.post", return_value=_fake_response(200, body)):
+            with self.assertRaises(ProviderResponseError):
+                self._extract(_png_path())
+
+    def test_invalid_json_text_is_response_error(self) -> None:
+        body = {"candidates": [{"content": {"parts": [{"text": "not valid json"}]}}]}
+        with patch("requests.post", return_value=_fake_response(200, body)):
+            with self.assertRaises(ProviderResponseError):
+                self._extract(_png_path())
+
+    def test_aces_player_valid_response(self) -> None:
+        payload = [
+            {
+                "market": "aces_player",
+                "player": "Sebastian Baez",
+                "bookmaker_display": "6+",
+                "decimal_odds": 2.92,
+                "confidence": 0.98,
+            }
+        ]
+        body = {"candidates": [{"content": {"parts": [{"text": json.dumps(payload)}]}}]}
+        with patch("requests.post", return_value=_fake_response(200, body)):
+            result = self._extract(_png_path())
+        self.assertEqual(len(result.readings), 1)
+        r = result.readings[0]
+        self.assertEqual(r.market, "aces_player")
+        self.assertEqual(r.player, "Sebastian Baez")
+        self.assertEqual(r.bookmaker_display, "6+")
+        self.assertEqual(r.decimal_odds, 2.92)
+        self.assertEqual(r.source_confidence, 0.98)
+        self.assertEqual(result.model, "gemini-2.5-flash")
+
+    def test_total_aces_match_valid_response(self) -> None:
+        payload = [
+            {
+                "market": "total_aces_match",
+                "player": None,
+                "bookmaker_display": "12+",
+                "decimal_odds": 2.40,
+                "confidence": 0.97,
+            }
+        ]
+        body = {"candidates": [{"content": {"parts": [{"text": json.dumps(payload)}]}}]}
+        with patch("requests.post", return_value=_fake_response(200, body)):
+            result = self._extract(_png_path())
+        self.assertEqual(len(result.readings), 1)
+        r = result.readings[0]
+        self.assertEqual(r.market, "total_aces_match")
+        self.assertIsNone(r.player)
+        self.assertEqual(r.bookmaker_display, "12+")
+        self.assertEqual(r.decimal_odds, 2.40)
+        self.assertEqual(r.source_confidence, 0.97)
+
+    def test_games_totals_valid_response(self) -> None:
+        payload = [
+            {
+                "market": "total_games",
+                "player": None,
+                "bookmaker_display": "Mais de 22.5",
+                "decimal_odds": 1.85,
+                "confidence": 0.96,
+            }
+        ]
+        body = {"candidates": [{"content": {"parts": [{"text": json.dumps(payload)}]}}]}
+        context = ExtractionContext(match_context=_CONTEXT, tab_type="GAMES_TOTALS")
+        with patch("requests.post", return_value=_fake_response(200, body)):
+            result = self._extract(_png_path(), context=context)
+        self.assertEqual(len(result.readings), 1)
+        r = result.readings[0]
+        self.assertEqual(r.market, "total_games")
+        self.assertEqual(r.bookmaker_display, "Mais de 22.5")
+        self.assertEqual(r.decimal_odds, 1.85)
+
+    def test_no_markets_returns_empty_list_without_inventing(self) -> None:
+        payload = []
+        body = {"candidates": [{"content": {"parts": [{"text": json.dumps(payload)}]}}]}
+        with patch("requests.post", return_value=_fake_response(200, body)):
+            result = self._extract(_png_path())
+        self.assertEqual(len(result.readings), 0)
+
+    def test_incomplete_items_are_skipped_not_invented(self) -> None:
+        payload = [
+            {"market": "aces_player", "bookmaker_display": "6+"},  # falta decimal_odds
+            {"market": "aces_player", "player": "Sebastian Baez", "bookmaker_display": "6+", "decimal_odds": 2.92},
+        ]
+        body = {"candidates": [{"content": {"parts": [{"text": json.dumps(payload)}]}}]}
+        with patch("requests.post", return_value=_fake_response(200, body)):
+            result = self._extract(_png_path())
+        self.assertEqual(len(result.readings), 1)
+
+    def test_markdown_fenced_json_is_accepted(self) -> None:
+        payload = [{"market": "total_games", "player": None, "bookmaker_display": "Menos de 20.5", "decimal_odds": 1.95}]
+        text = "```json\n" + json.dumps(payload) + "\n```"
+        body = {"candidates": [{"content": {"parts": [{"text": text}]}}]}
+        with patch("requests.post", return_value=_fake_response(200, body)):
+            result = self._extract(_png_path())
+        self.assertEqual(len(result.readings), 1)
+        self.assertEqual(result.readings[0].bookmaker_display, "Menos de 20.5")
+
+    def test_audit_metadata_contains_provider_and_model(self) -> None:
+        from src.screenshot_parser.gemini_provider import GeminiVisionProvider
+
+        provider = GeminiVisionProvider(model="gemini-custom-model")
+        self.assertEqual(provider.name, "gemini")
+        payload = [{"market": "total_aces_match", "player": None, "bookmaker_display": "8+", "decimal_odds": 1.65}]
+        body = {"candidates": [{"content": {"parts": [{"text": json.dumps(payload)}]}}]}
+        with patch("requests.post", return_value=_fake_response(200, body)):
+            res = provider.extract(_png_path(), ExtractionContext(match_context=None, tab_type="ACES"))
+        self.assertEqual(res.model, "gemini-custom-model")
+        self.assertIn("total_aces_match", res.raw_response)
+
+
 if __name__ == "__main__":
     unittest.main()
+

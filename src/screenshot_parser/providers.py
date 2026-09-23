@@ -91,15 +91,24 @@ class FailingVisionProvider:
 def get_provider(name: str | None = None) -> ScreenshotVisionProvider:
     """Fabrica do provider configurado (env var
     `TENNIS_RADAR_VISION_PROVIDER`, default "anthropic" -- documentado em
-    config.py). "fake"/"failing" so podem ser instanciados diretamente
-    (testes), nunca resolvidos por nome, para nao vazarem para producao."""
+    config.py). Suporta "anthropic" e "gemini". "fake"/"failing" so podem
+    ser instanciados diretamente (testes), nunca resolvidos por nome."""
     import os
 
     from . import config as cfg
 
     resolved = name or os.environ.get(cfg.VISION_PROVIDER_ENV_VAR, cfg.DEFAULT_VISION_PROVIDER)
+    if isinstance(resolved, str):
+        resolved = resolved.strip().lower()
+
     if resolved == "anthropic":
         from .anthropic_provider import AnthropicVisionProvider
 
         return AnthropicVisionProvider()
+    elif resolved == "gemini":
+        from .gemini_provider import GeminiVisionProvider
+
+        return GeminiVisionProvider()
+
     raise ProviderUnavailableError(f"Provider de visao desconhecido ou nao suportado em producao: {resolved!r}.")
+

@@ -74,11 +74,12 @@ EXTRACTION_WARNING_NO_MARKETS_FOUND = "NENHUM_MERCADO_ENCONTRADO"
 CONFIRMED_BY_DEFAULT = "local_user"
 
 # ---------------------------------------------------------------------------
-# LOTE F -- provider de visao (desacoplado, configuravel por env var)
+# LOTE F / GEMINI -- providers de visao (desacoplados, configuraveis por env var)
 # ---------------------------------------------------------------------------
 
 VISION_PROVIDER_ENV_VAR = "TENNIS_RADAR_VISION_PROVIDER"
 DEFAULT_VISION_PROVIDER = "anthropic"
+SUPPORTED_VISION_PROVIDERS = ("anthropic", "gemini")
 
 VISION_MODEL_ENV_VAR = "TENNIS_RADAR_VISION_MODEL"
 VISION_TIMEOUT_ENV_VAR = "TENNIS_RADAR_VISION_TIMEOUT_SECONDS"
@@ -87,3 +88,9 @@ DEFAULT_VISION_TIMEOUT_SECONDS = 60
 ANTHROPIC_API_KEY_ENV_VAR = "ANTHROPIC_API_KEY"
 ANTHROPIC_MESSAGES_URL = "https://api.anthropic.com/v1/messages"
 ANTHROPIC_API_VERSION = "2023-06-01"
+
+GEMINI_API_KEY_ENV_VAR = "GEMINI_API_KEY"
+GEMINI_MODEL_ENV_VAR = "GEMINI_MODEL"
+DEFAULT_GEMINI_MODEL = "gemini-2.5-flash"
+GEMINI_GENERATE_CONTENT_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+
