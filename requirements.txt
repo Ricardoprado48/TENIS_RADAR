@@ -1,0 +1,17 @@
+﻿pandas
+numpy
+scipy
+scikit-learn
+duckdb
+pyarrow
+requests
+beautifulsoup4
+lxml
+matplotlib
+python-dotenv
+pytest
+fastapi
+uvicorn
+httpx
+python-multipart
+pillow

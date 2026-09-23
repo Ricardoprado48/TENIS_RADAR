@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+/* Paleta do LOTE B (docs/018_PWA_ARQUITETURA.md secao 15):
+   ink/surface/rule = superficies escuras estilo quadra a noite;
+   chalk/mist = texto (linha de giz / cinza esmaecido);
+   court = acento de navegacao/interacao (azul de quadra dura);
+   ball = acento reservado so para status "online" (bolinha de tenis);
+   clay = acento reservado so para status "offline"/erro (saibro). */
+@theme {
+  --color-ink: #0d1b1f;
+  --color-surface: #13262b;
+  --color-rule: #2a3f42;
+  --color-chalk: #edefe6;
+  --color-mist: #7e9598;
+  --color-court: #4c8fb0;
+  --color-ball: #d7e85c;
+  --color-clay: #c1512f;
+
+  --font-display: "Space Grotesk", sans-serif;
+  --font-body: "IBM Plex Sans", sans-serif;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background-color: var(--color-ink);
+  color: var(--color-chalk);
+  font-family: var(--font-body);
+}
