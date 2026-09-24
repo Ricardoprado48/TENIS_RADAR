@@ -1,25 +1,23 @@
 """Resolucao de identidade de jogador (item 2 da instrucao).
 
-Nao existe, em nenhuma fase anterior do projeto, uma tabela de aliases nem
-uma funcao de casamento de nomes -- `data/processed/{tour}/players.parquet`
-(Fase 2) so guarda um nome canonico por `player_id`. Esta fase implementa
-tres niveis deterministicos de casamento, do mais para o menos confiavel,
-NUNCA escolhendo silenciosamente entre candidatos ambiguos (associa so
-quando exatamente 1 candidato sobra em cada nivel):
+A resolução é conservadora e nunca escolhe silenciosamente entre candidatos
+ambíguos. A ordem é:
 
+  override      -- correção explícita para duplicidade comprovada na própria
+                   base canônica (config.PLAYER_IDENTITY_OVERRIDES). O método
+                   exposto continua sendo "alias" para não ampliar o contrato.
   exact         -- nome completo normalizado bate com exatamente 1 player_id.
-  alias         -- formato abreviado tipico de quadros de torneio ("J.
-                    Ostapenko"): inicial do primeiro nome + sobrenome,
-                    resolvido por sobrenome + inicial contra a base de
-                    jogadores do tour, com exatamente 1 candidato.
-  fuzzy_review  -- nenhum match exato/alias, mas exatamente 1 nome completo
-                    do tour fica acima do limiar de similaridade
-                    (difflib.SequenceMatcher, stdlib -- nenhuma dependencia
-                    nova). Usado para gerar previsao, mas sinalizado para
-                    revisao humana (nunca tratado como certeza).
-  unresolved    -- nenhum candidato, ou mais de um candidato igualmente
-                    plausivel em qualquer nivel. Nunca gera previsao
-                    (item 2 da instrucao).
+  alias         -- equivalência estrutural inequívoca:
+                   * nome completo sem diferença de espaços ("Xinyu" vs "Xin Yu");
+                   * mesmos tokens em ordem diferente ("Gabriela Elena" vs
+                     "Elena Gabriela");
+                   * formato abreviado inicial + sobrenome.
+  fuzzy_review  -- nenhum match acima, mas exatamente 1 nome completo fica
+                   acima do limiar de similaridade. Pode gerar previsão, porém
+                   fica sinalizado para revisão humana.
+  unresolved    -- nenhum candidato ou ambiguidade real. Nunca gera previsão.
+
+Nenhum nome é associado por país, ranking ou heurística de "parece ser".
 """
 
 from __future__ import annotations
@@ -44,6 +42,14 @@ def normalize_name(raw) -> str:
     return s
 
 
+def _compact_name(raw) -> str:
+    return normalize_name(raw).replace(" ", "")
+
+
+def _token_key(raw) -> tuple[str, ...]:
+    return tuple(sorted(normalize_name(raw).split()))
+
+
 @dataclass(frozen=True)
 class ResolutionResult:
     player_id: str | None
@@ -54,12 +60,14 @@ class ResolutionResult:
 
 
 class PlayerIndex:
-    """Indices de nome construidos uma vez por tour e reaproveitados para
-    todas as partidas daquele tour na mesma execucao."""
+    """Índices de nome construídos uma vez por tour."""
 
-    def __init__(self, players: pd.DataFrame):
+    def __init__(self, players: pd.DataFrame, tour: str | None = None):
         self.players = players
+        self.tour = (tour or "").upper().strip()
         self._by_full_name: dict[str, list[str]] = {}
+        self._by_compact_name: dict[str, list[tuple[str, str]]] = {}
+        self._by_token_key: dict[tuple[str, ...], list[tuple[str, str]]] = {}
         self._by_last_name: dict[str, list[tuple[str, str, str]]] = {}
         self._all_full_names: list[str] = []
 
@@ -68,6 +76,12 @@ class PlayerIndex:
             self._by_full_name.setdefault(full_norm, []).append(row.player_id)
             if full_norm:
                 self._all_full_names.append(full_norm)
+                self._by_compact_name.setdefault(
+                    _compact_name(row.name), []
+                ).append((row.player_id, row.name))
+                self._by_token_key.setdefault(
+                    _token_key(row.name), []
+                ).append((row.player_id, row.name))
 
             last_norm = normalize_name(row.name_last)
             first_norm = normalize_name(row.name_first)
@@ -82,6 +96,10 @@ class PlayerIndex:
         if not norm:
             return ResolutionResult(None, "unresolved", None, 0, "nome vazio ou invalido")
 
+        override = self._resolve_override(norm)
+        if override is not None:
+            return override
+
         exact = self._by_full_name.get(norm, [])
         if len(exact) == 1:
             return ResolutionResult(exact[0], "exact", norm, 1, "match exato de nome completo")
@@ -91,24 +109,77 @@ class PlayerIndex:
                 f"nome completo ambiguo: {len(exact)} jogadores com o mesmo nome normalizado",
             )
 
-        alias_result = self._resolve_alias(norm)
+        structural = self._resolve_structural_alias(raw_name)
+        if structural is not None:
+            return structural
+
+        alias_result = self._resolve_initial_last_alias(norm)
         if alias_result is not None:
             return alias_result
 
         return self._resolve_fuzzy(norm)
 
-    def _resolve_alias(self, norm: str) -> ResolutionResult | None:
+    def _resolve_override(self, norm: str) -> ResolutionResult | None:
+        player_id = cfg.PLAYER_IDENTITY_OVERRIDES.get((self.tour, norm))
+        if player_id is None:
+            return None
+
+        rows = self.players[self.players["player_id"] == player_id]
+        if len(rows) != 1:
+            return ResolutionResult(
+                None,
+                "unresolved",
+                None,
+                int(len(rows)),
+                f"override de identidade aponta para player_id ausente/ambiguo: {player_id}",
+            )
+
+        return ResolutionResult(
+            player_id,
+            "alias",
+            str(rows.iloc[0]["name"]),
+            1,
+            "override canonico comprovado para duplicidade de player_id",
+        )
+
+    def _resolve_structural_alias(self, raw_name: str) -> ResolutionResult | None:
+        compact = self._by_compact_name.get(_compact_name(raw_name), [])
+        compact_unique = {pid: name for pid, name in compact}
+        if len(compact_unique) == 1:
+            pid, full_name = next(iter(compact_unique.items()))
+            return ResolutionResult(
+                pid, "alias", full_name, 1,
+                "nome equivalente apos remover diferencas de espacamento",
+            )
+        if len(compact_unique) > 1:
+            return ResolutionResult(
+                None, "unresolved", None, len(compact_unique),
+                f"nome compacto ambiguo: {len(compact_unique)} candidatos",
+            )
+
+        token_matches = self._by_token_key.get(_token_key(raw_name), [])
+        token_unique = {pid: name for pid, name in token_matches}
+        if len(token_unique) == 1:
+            pid, full_name = next(iter(token_unique.items()))
+            return ResolutionResult(
+                pid, "alias", full_name, 1,
+                "mesmos componentes de nome em ordem diferente",
+            )
+        if len(token_unique) > 1:
+            return ResolutionResult(
+                None, "unresolved", None, len(token_unique),
+                f"componentes de nome ambiguos: {len(token_unique)} candidatos",
+            )
+        return None
+
+    def _resolve_initial_last_alias(self, norm: str) -> ResolutionResult | None:
         parts = norm.split(" ")
         if len(parts) < 2:
             return None
 
         candidate_lasts = []
-        # formato "j ostapenko" (inicial + sobrenome) -- o mais comum em
-        # quadros de torneio.
         if len(parts[0]) <= 2:
             candidate_lasts.append((parts[0][0], " ".join(parts[1:])))
-        # nome completo dado mas com sobrenome composto/grafia diferente da
-        # canonica -- tenta so a ultima palavra como sobrenome.
         candidate_lasts.append((parts[0][0], parts[-1]))
 
         seen_pids: dict[str, str] = {}
@@ -131,9 +202,6 @@ class PlayerIndex:
         close = difflib.get_close_matches(
             norm, self._all_full_names, n=3, cutoff=cfg.FUZZY_MATCH_MIN_RATIO
         )
-        # varios nomes normalizados diferentes podem mapear para o mesmo
-        # player_id (nao deveria, mas nao assumimos); so aceita se todos os
-        # nomes proximos resolverem para o mesmo unico player_id.
         pids = set()
         for name in close:
             pids.update(self._by_full_name.get(name, []))
@@ -149,10 +217,9 @@ class PlayerIndex:
 
 
 def resolve_matches(upcoming: pd.DataFrame, players_by_tour: dict[str, pd.DataFrame]) -> pd.DataFrame:
-    """Para cada partida bruta, resolve jogador A e jogador B contra a base
-    de jogadores do TOUR correspondente (nunca cruza ATP com WTA)."""
+    """Resolve os dois jogadores sempre dentro do tour correspondente."""
 
-    indexes = {tour: PlayerIndex(df) for tour, df in players_by_tour.items()}
+    indexes = {tour: PlayerIndex(df, tour=tour) for tour, df in players_by_tour.items()}
 
     rows = []
     for row in upcoming.itertuples(index=False):
@@ -199,9 +266,7 @@ def resolve_matches(upcoming: pd.DataFrame, players_by_tour: dict[str, pd.DataFr
 
 
 def flag_duplicate_matches(resolved: pd.DataFrame) -> pd.DataFrame:
-    """item 10: 'partidas repetidas' -- mesma dupla de jogadores (ordem
-    livre) no mesmo tour/data conta como a mesma partida; mantem a primeira
-    ocorrencia para geracao de previsao e marca as demais."""
+    """Marca mesma dupla, mesma data e mesmo tour como duplicada."""
 
     df = resolved.copy()
     pair_key = df.apply(
