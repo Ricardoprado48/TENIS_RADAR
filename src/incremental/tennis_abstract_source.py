@@ -87,6 +87,16 @@ class PlayerNotFoundError(TennisAbstractError):
 class NetworkError(TennisAbstractError):
     """Falha de conexão/timeout antes de obter status HTTP."""
 
+    def __init__(self, message: str, timeout: bool = False) -> None:
+        super().__init__(message)
+        self.timeout = timeout
+
+
+def _is_timeout(exc: BaseException) -> bool:
+    if isinstance(exc, TimeoutError):
+        return True
+    return isinstance(exc, urllib.error.URLError) and isinstance(exc.reason, TimeoutError)
+
 
 @dataclass(frozen=True)
 class HttpResponse:
@@ -266,7 +276,7 @@ class TennisAbstractSource:
                 body = ""
             return HttpResponse(exc.code, body, headers)
         except Exception as exc:
-            raise NetworkError(f"Falha de conexão com {url}: {exc}") from exc
+            raise NetworkError(f"Falha de conexão com {url}: {exc}", timeout=_is_timeout(exc)) from exc
 
     @staticmethod
     def player_url(tour: str, slug: str) -> str:
@@ -309,6 +319,7 @@ class TennisAbstractSource:
                 cached.setdefault("retry_after", None)
                 cached.setdefault("page_fullname", None)
                 cached.setdefault("error", None)
+                cached.setdefault("error_code", None)
                 cached["player"] = {**cached.get("player", {}), **player}
                 cached["cache_hit"] = True
                 return cached
@@ -327,11 +338,13 @@ class TennisAbstractSource:
             "matches": [],
             "cache_hit": False,
             "error": None,
+            "error_code": None,
         }
         try:
             resp = self._http_get(url)
         except NetworkError as exc:
-            result.update(fetch_status=NETWORK_ERROR, error=str(exc))
+            result.update(fetch_status=NETWORK_ERROR, error=str(exc),
+                          error_code="TIMEOUT" if exc.timeout else NETWORK_ERROR)
             return result
 
         result["http_status"] = resp.status
@@ -385,7 +398,7 @@ class TennisAbstractSource:
         if status == NO_PLAYER_DATA:
             raise PlayerNotFoundError(f"Página sem dados de jogador: {player_name} ({slug})")
         if status == NETWORK_ERROR:
-            raise NetworkError(result["error"])
+            raise NetworkError(result["error"], timeout=result["error_code"] == "TIMEOUT")
         if status == HTTP_ERROR:
             raise TennisAbstractError(f"HTTP {result['http_status']} ao consultar {result['source_url']}")
         result["player"] = {"name": player_name, "slug": slug, "tour": tour_clean}

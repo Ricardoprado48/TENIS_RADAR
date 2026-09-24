@@ -66,7 +66,13 @@ def get_player_freshness(
     source_status: str = "OK",
     has_partial_issues: bool = False,
 ) -> dict[str, Any]:
-    """Calcula os metadados de recência e estado de freshness para um jogador."""
+    """LEGADO/DEPRECADO (T7): freshness por NOME e por aparição no overlay.
+
+    Não é fonte de verdade operacional: um jogador que só aparece como
+    adversário vira UPDATED, e a chave é o nome. Mantido sem alteração apenas
+    porque `api/services/radar_service.py` ainda o chama (API fora do escopo do
+    T7). A lógica correta, por player_id e resultado da coleta, está em
+    `src.incremental.player_freshness.build_player_freshness`."""
     tour_clean = tour.upper()
     base_cutoff = cfg.TA_BASE_CUTOFF
 
