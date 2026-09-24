@@ -28,6 +28,7 @@ Cobre rigorosamente as 23 categorias de testes exigidas pela especificação:
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import shutil
@@ -39,6 +40,7 @@ from unittest import mock
 
 import pandas as pd
 
+from src.incremental import config as inc_cfg
 from src.incremental.config import (
     RAW_SCHEMA_COLUMNS,
     STAT_COLUMNS,
@@ -66,6 +68,22 @@ from src.incremental.overlay import (
     save_overlay_matches,
 )
 from src.normalization.config import PROCESSED_DIRS
+from src.normalization.matches import OUTPUT_COLUMNS
+
+REAL_ATP_OVERLAY_PATH = inc_cfg.TA_OVERLAY_DIR / "atp" / "matches.parquet"
+
+
+def _file_state(path: Path) -> tuple[str, int] | None:
+    """(sha256, mtime_ns) do arquivo, ou None se não existir. Somente leitura."""
+    if not path.exists():
+        return None
+    return hashlib.sha256(path.read_bytes()).hexdigest(), path.stat().st_mtime_ns
+
+
+def _valid_overlay_rows() -> pd.DataFrame:
+    """2 linhas da base oficial ATP no schema canônico OUTPUT_COLUMNS."""
+    df = pd.read_parquet(PROCESSED_DIRS["atp"] / "matches.parquet")
+    return df.iloc[0:2][OUTPUT_COLUMNS].reset_index(drop=True)
 
 
 def _make_sample_matchhead_row(**kwargs) -> dict[str, str]:
@@ -112,6 +130,20 @@ def _make_sample_matchhead_row(**kwargs) -> dict[str, str]:
 
 
 class TestTennisAbstractOverlay(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        # F. guarda: a suíte nunca pode alterar (nem criar) o overlay ATP real
+        cls._real_atp_state = _file_state(REAL_ATP_OVERLAY_PATH)
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        after = _file_state(REAL_ATP_OVERLAY_PATH)
+        if after != cls._real_atp_state:
+            raise AssertionError(
+                f"Suíte alterou o overlay ATP real {REAL_ATP_OVERLAY_PATH}: "
+                f"{cls._real_atp_state} -> {after}"
+            )
+
     def setUp(self) -> None:
         self.temp_dir = tempfile.mkdtemp()
         self.cache_dir = Path(self.temp_dir) / "cache"
@@ -363,14 +395,59 @@ class TestTennisAbstractOverlay(unittest.TestCase):
         official_path = PROCESSED_DIRS["atp"] / "matches.parquet"
         official_mtime = official_path.stat().st_mtime
         official_size = official_path.stat().st_size
+        real_overlay_before = _file_state(REAL_ATP_OVERLAY_PATH)
 
-        df_dummy = pd.DataFrame([{"col": 1}])
-        save_overlay_matches("ATP", df_dummy)
+        with mock.patch.object(inc_cfg, "TA_OVERLAY_DIR", self.overlay_dir):
+            saved = save_overlay_matches("ATP", _valid_overlay_rows())
+
+        # A. escrita ocorre somente no diretório temporário
+        self.assertEqual(saved, self.overlay_dir / "atp" / "matches.parquet")
+        self.assertTrue(saved.exists())
+        self.assertEqual(_file_state(REAL_ATP_OVERLAY_PATH), real_overlay_before)
 
         current_mtime = official_path.stat().st_mtime
         current_size = official_path.stat().st_size
         self.assertEqual(official_mtime, current_mtime)
         self.assertEqual(official_size, current_size)
+
+    # 16b. schema inválido é rejeitado
+    def test_16b_save_overlay_rejects_invalid_schema(self) -> None:
+        with mock.patch.object(inc_cfg, "TA_OVERLAY_DIR", self.overlay_dir):
+            with self.assertRaises(ValueError):
+                save_overlay_matches("ATP", pd.DataFrame({"col": [1]}))
+            # colunas certas em ordem diferente também são rejeitadas
+            with self.assertRaises(ValueError):
+                save_overlay_matches("ATP", _valid_overlay_rows()[OUTPUT_COLUMNS[::-1]])
+        self.assertFalse((self.overlay_dir / "atp" / "matches.parquet").exists())
+
+    # 16c. DataFrame vazio é rejeitado
+    def test_16c_save_overlay_rejects_empty_df(self) -> None:
+        with mock.patch.object(inc_cfg, "TA_OVERLAY_DIR", self.overlay_dir):
+            with self.assertRaises(ValueError):
+                save_overlay_matches("ATP", pd.DataFrame())
+            with self.assertRaises(ValueError):
+                save_overlay_matches("ATP", pd.DataFrame(columns=OUTPUT_COLUMNS))
+        self.assertFalse((self.overlay_dir / "atp" / "matches.parquet").exists())
+
+    # 16d. schema OUTPUT_COLUMNS válido é aceito e relido íntegro
+    def test_16d_save_overlay_accepts_output_columns_schema(self) -> None:
+        df = _valid_overlay_rows()
+        with mock.patch.object(inc_cfg, "TA_OVERLAY_DIR", self.overlay_dir):
+            path = save_overlay_matches("ATP", df)
+            reloaded = load_overlay_matches("ATP")
+        self.assertTrue(path.exists())
+        self.assertEqual(list(reloaded.columns), OUTPUT_COLUMNS)
+        self.assertEqual(len(reloaded), 2)
+
+    # 16e. arquivo existente fica byte a byte intacto após tentativa inválida
+    def test_16e_existing_overlay_untouched_on_invalid_save(self) -> None:
+        with mock.patch.object(inc_cfg, "TA_OVERLAY_DIR", self.overlay_dir):
+            path = save_overlay_matches("ATP", _valid_overlay_rows())
+            before = _file_state(path)
+            for bad in (pd.DataFrame({"col": [1]}), pd.DataFrame()):
+                with self.assertRaises(ValueError):
+                    save_overlay_matches("ATP", bad)
+        self.assertEqual(_file_state(path), before)
 
     # 17. merge base + overlay
     def test_17_get_effective_matches_merges_in_memory(self) -> None:
