@@ -2,10 +2,11 @@
 
 Escopo desta camada:
 - autenticar com LIVETENNISAPI_KEY;
-- consultar somente partidas `upcoming`;
-- restringir a simples (`draw=singles`) e ATP/WTA;
+- consultar partidas `upcoming` de simples ATP/WTA;
+- consultar `fixtures` somente como metadado de agenda (principalmente
+  `event_date`, que não existe no objeto Match);
 - paginar sem depender do SDK oficial;
-- retornar o payload bruto da API para a etapa de normalização.
+- retornar payloads brutos para a etapa de normalização.
 
 Nenhuma probabilidade, ranking, mercado ou análise da Live Tennis entra no
 modelo do Tennis Radar por esta camada.
@@ -86,14 +87,14 @@ class LiveTennisClient:
             raise LiveTennisAPIError("Live Tennis API retornou payload fora do contrato esperado")
         return payload
 
-    def list_upcoming_singles(
+    def _list_paginated(
         self,
-        tour: str,
+        path: str,
         *,
-        page_size: int = 50,
+        tour: str,
+        page_size: int,
+        extra_params: dict[str, Any] | None = None,
     ) -> list[dict[str, Any]]:
-        """Retorna todas as partidas futuras de simples do tour informado."""
-
         tour_key = tour.upper().strip()
         if tour_key not in SUPPORTED_TOURS:
             raise ValueError(f"tour inválido: {tour!r}; esperado ATP ou WTA")
@@ -105,33 +106,31 @@ class LiveTennisClient:
         collected: list[dict[str, Any]] = []
 
         while True:
-            payload = self._get_json(
-                "/matches",
-                {
-                    "status": "upcoming",
-                    "tour": api_tour,
-                    "draw": "singles",
-                    "limit": page_size,
-                    "offset": offset,
-                },
-            )
+            params: dict[str, Any] = {
+                "tour": api_tour,
+                "draw": "singles",
+                "limit": page_size,
+                "offset": offset,
+            }
+            if extra_params:
+                params.update(extra_params)
 
+            payload = self._get_json(path, params)
             data = payload.get("data")
             meta = payload.get("meta")
             if not isinstance(data, list) or not isinstance(meta, dict):
-                raise LiveTennisAPIError("Live Tennis API retornou data/meta fora do contrato esperado")
+                raise LiveTennisAPIError(
+                    "Live Tennis API retornou data/meta fora do contrato esperado"
+                )
 
             for row in data:
                 if not isinstance(row, dict):
-                    raise LiveTennisAPIError("Live Tennis API retornou partida fora do contrato esperado")
-                if row.get("status") != "upcoming":
                     raise LiveTennisAPIError(
-                        "Live Tennis API retornou partida com status diferente de upcoming"
+                        "Live Tennis API retornou registro fora do contrato esperado"
                     )
                 collected.append(row)
 
-            has_more = bool(meta.get("has_more"))
-            if not has_more:
+            if not bool(meta.get("has_more")):
                 break
 
             if not data:
@@ -141,6 +140,47 @@ class LiveTennisClient:
             offset += len(data)
 
         return collected
+
+    def list_upcoming_singles(
+        self,
+        tour: str,
+        *,
+        page_size: int = 50,
+    ) -> list[dict[str, Any]]:
+        """Retorna todas as partidas futuras de simples do tour informado."""
+
+        rows = self._list_paginated(
+            "/matches",
+            tour=tour,
+            page_size=page_size,
+            extra_params={"status": "upcoming"},
+        )
+        for row in rows:
+            if row.get("status") != "upcoming":
+                raise LiveTennisAPIError(
+                    "Live Tennis API retornou partida com status diferente de upcoming"
+                )
+        return rows
+
+    def list_fixtures_singles(
+        self,
+        tour: str,
+        *,
+        page_size: int = 50,
+    ) -> list[dict[str, Any]]:
+        """Retorna fixtures de simples do tour.
+
+        O endpoint pode conter estados concluídos/cancelados; por isso esta
+        função não usa fixture como filtro operacional. Ele serve apenas para
+        metadados de agenda que o objeto Match não carrega, especialmente
+        `event_date`.
+        """
+
+        return self._list_paginated(
+            "/fixtures",
+            tour=tour,
+            page_size=page_size,
+        )
 
     def list_all_upcoming_singles(self) -> dict[str, list[dict[str, Any]]]:
         """Coleta ATP e WTA separadamente para manter o tour explícito."""
