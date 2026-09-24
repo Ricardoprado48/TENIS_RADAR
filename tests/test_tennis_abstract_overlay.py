@@ -57,7 +57,8 @@ from src.incremental.tennis_abstract_source import (
     slugify_player_name,
 )
 from src.incremental.tennis_abstract_adapter import (
-    match_context_key,
+    CollectedPlayer,
+    load_acceptance_policy,
     parse_ta_match_row,
     process_tennis_abstract_matches,
 )
@@ -86,6 +87,16 @@ def _valid_overlay_rows() -> pd.DataFrame:
     return df.iloc[0:2][OUTPUT_COLUMNS].reset_index(drop=True)
 
 
+def _collected(player_id: str) -> CollectedPlayer:
+    """Jogador coletado com nome/mão canônicos de players.parquet."""
+    tour = player_id.split("-", 1)[0].lower()
+    rec = pd.read_parquet(PROCESSED_DIRS[tour] / "players.parquet").set_index("player_id").loc[player_id]
+    return CollectedPlayer(player_id=player_id, name=str(rec["name"]), hand=str(rec["hand"]))
+
+
+ALCARAZ_ID, SINNER_ID, MACHAC_ID, HURKACZ_ID = "ATP-207989", "ATP-206173", "ATP-207830", "ATP-128034"
+
+
 def _make_sample_matchhead_row(**kwargs) -> dict[str, str]:
     """Cria um registro sintético compatível com matchhead do Tennis Abstract."""
     base = {col: "" for col in MATCHHEAD_COLUMNS}
@@ -103,6 +114,7 @@ def _make_sample_matchhead_row(**kwargs) -> dict[str, str]:
         "time": "115",
         "matchid": "2026-500-101",
         "matchnum": "101",
+        "max": "3",
         # Jogador vencedor (A)
         "aces": "12",
         "dfs": "2",
@@ -134,6 +146,7 @@ class TestTennisAbstractOverlay(unittest.TestCase):
     def setUpClass(cls) -> None:
         # F. guarda: a suíte nunca pode alterar (nem criar) o overlay ATP real
         cls._real_atp_state = _file_state(REAL_ATP_OVERLAY_PATH)
+        cls.atp_policy = load_acceptance_policy("ATP")
 
     @classmethod
     def tearDownClass(cls) -> None:
@@ -193,7 +206,7 @@ class TestTennisAbstractOverlay(unittest.TestCase):
     # 3. 9 campos
     def test_03_all_nine_critical_fields_mapped(self) -> None:
         m = _make_sample_matchhead_row()
-        row, status = parse_ta_match_row(m, "Jannik Sinner", "ATP")
+        row, status = parse_ta_match_row(m, _collected(SINNER_ID), "ATP", self.atp_policy)
         self.assertEqual(status, "VALID")
         self.assertIsNotNone(row)
 
@@ -224,10 +237,12 @@ class TestTennisAbstractOverlay(unittest.TestCase):
     # 4. mapping próprio/oponente
     def test_04_mapping_when_player_is_loser(self) -> None:
         m = _make_sample_matchhead_row(wl="L", opp="Novak Djokovic")
-        row, status = parse_ta_match_row(m, "Tomas Machac", "ATP")
+        row, status = parse_ta_match_row(m, _collected(MACHAC_ID), "ATP", self.atp_policy)
         self.assertEqual(status, "VALID")
         self.assertEqual(row["winner_name"], "Novak Djokovic")
         self.assertEqual(row["loser_name"], "Tomas Machac")
+        self.assertEqual(row["loser_id"], MACHAC_ID.split("-", 1)[1])
+        self.assertIsNone(row["winner_id"])  # adversário resolvido depois, em lote
         # Quando wl == "L", as colunas de oaces pertencem ao vencedor (Novak)
         self.assertEqual(row["w_ace"], 15)
         self.assertEqual(row["l_ace"], 12)
@@ -316,7 +331,7 @@ class TestTennisAbstractOverlay(unittest.TestCase):
     def test_12_incomplete_match_is_rejected_never_zero_filled(self) -> None:
         # Faltando aces do jogador
         m = _make_sample_matchhead_row(aces="")
-        row, status = parse_ta_match_row(m, "Carlos Alcaraz", "ATP")
+        row, status = parse_ta_match_row(m, _collected(ALCARAZ_ID), "ATP", self.atp_policy)
         self.assertIsNone(row)
         self.assertTrue(status.startswith("INCOMPLETE_STATS:w_ace"))
 
@@ -377,14 +392,14 @@ class TestTennisAbstractOverlay(unittest.TestCase):
     def test_15_cross_player_duplicate_matches_deduplicated(self) -> None:
         # Mesma partida vista do ponto de vista de Alcaraz (W) e Hurkacz (L)
         p1 = {
-            "player": {"name": "Carlos Alcaraz", "tour": "ATP"},
+            "player": {"name": "Carlos Alcaraz", "tour": "ATP", "player_id": ALCARAZ_ID},
             "matches": [_make_sample_matchhead_row(wl="W", opp="Hubert Hurkacz")],
         }
         p2 = {
-            "player": {"name": "Hubert Hurkacz", "tour": "ATP"},
+            "player": {"name": "Hubert Hurkacz", "tour": "ATP", "player_id": HURKACZ_ID},
             "matches": [_make_sample_matchhead_row(wl="L", opp="Carlos Alcaraz", aces="15", oaces="12")],
         }
-        res = process_tennis_abstract_matches([p1, p2], "ATP", cutoff_date="2026-05-25")
+        res = process_tennis_abstract_matches([p1, p2], "ATP", cutoff_date="2026-05-25", policy=self.atp_policy)
         # Deve incorporar apenas 1 partida física única (que vira 2 perspectivas normalizadas)
         self.assertEqual(res["valid_count"], 1)
         self.assertEqual(res["rejected_reasons"].get("DUPLICATE_CROSS_PLAYER"), 1)

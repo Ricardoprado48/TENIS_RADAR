@@ -4,22 +4,67 @@ Transforma as linhas de `matchmx` do Tennis Abstract no schema bruto Sackmann,
 valida a integridade estrita dos 9 campos críticos de saque/devolução (rejeitando
 partidas incompletas sem preencher com zero nem estimar), deduplica partidas
 cruzadas e converte para a tabela normalizada de partidas.
+
+Regras comprovadas no preflight T1 (876 partidas TA × Sackmann, 100% iguais):
+- `tourney_level` = `level` do TA; `best_of` = `max` do TA; `round` = `round` do TA;
+- `match_id` = `matchid` do TA cortado no ÚLTIMO hífen (necessário p/ Copa Davis).
+Nenhum campo recebe default inventado: ausente => rejeitado (ou NA, quando o
+campo também é opcional no Sackmann, como `minutes` e `rank`).
+
+O jogador coletado chega com `player_id` conhecido (`payload["player"]["player_id"]`)
+e nunca é re-resolvido por nome; só o adversário é resolvido (exact/alias).
 """
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any
+
 import pandas as pd
 
+from src.normalization.config import PROCESSED_DIRS
 from src.normalization.matches import transform_raw_matches
 from src.normalization.players import load_players
 from . import identity_new as ident_new
-from . import dedupe as dedup
 
 CRITICAL_STAT_FIELDS = [
     "w_ace", "w_df", "w_svpt", "w_1stIn", "w_1stWon", "w_2ndWon", "w_SvGms", "w_bpSaved", "w_bpFaced",
     "l_ace", "l_df", "l_svpt", "l_1stIn", "l_1stWon", "l_2ndWon", "l_SvGms", "l_bpSaved", "l_bpFaced",
 ]
+
+VALID_BEST_OF = (3, 5)
+COLLECTED_METHOD = "collected_player_id"
+
+
+@dataclass(frozen=True)
+class CollectedPlayer:
+    """Jogador cuja página TA foi coletada. `player_id` canônico (ex.: "ATP-207989")."""
+    player_id: str
+    name: str
+    hand: str | None
+
+
+@dataclass(frozen=True)
+class AcceptancePolicy:
+    """Níveis e rodadas aceitos: só os que já existem na base Sackmann do tour
+    (decisão B1). Rodadas de qualifying (Q1-Q3) não existem na base e ficam fora."""
+    levels: frozenset[str]
+    rounds: frozenset[str]
+
+
+def policy_from_base(base: pd.DataFrame) -> AcceptancePolicy:
+    return AcceptancePolicy(
+        levels=frozenset(base["tourney_level"].dropna().astype(str)),
+        rounds=frozenset(base["round"].dropna().astype(str)),
+    )
+
+
+def load_acceptance_policy(tour: str) -> AcceptancePolicy:
+    """Lê (somente leitura) níveis e rodadas presentes na base Sackmann do tour."""
+    base = pd.read_parquet(
+        PROCESSED_DIRS[tour.lower()] / "matches.parquet", columns=["tourney_level", "round"],
+    )
+    return policy_from_base(base)
 
 
 def _safe_int(val: Any) -> int | None:
@@ -31,29 +76,78 @@ def _safe_int(val: Any) -> int | None:
         return None
 
 
-def match_context_key(tour: str, date: str, tourn: str, player_a: str, player_b: str, score: str) -> str:
-    pair = "|".join(sorted([str(player_a).strip(), str(player_b).strip()]))
-    return f"{tour.upper()}:{date}:{tourn}:{pair}:{score}"
+def _clean(val: Any) -> str | None:
+    s = str(val).strip() if val is not None else ""
+    return s or None
 
 
-def parse_ta_match_row(m: dict[str, str], player_name: str, tour: str) -> tuple[dict[str, Any] | None, str]:
+def parse_matchid(matchid: str) -> tuple[str, int] | None:
+    """`2026-520-223` -> ("2026-520", 223);
+    `2024-M-DC-2024-FLS-M-NED-ESP-01-002` -> ("2024-M-DC-2024-FLS-M-NED-ESP-01", 2).
+    Retorna None se não houver hífen, prefixo vazio ou último bloco não numérico."""
+    matchid = (matchid or "").strip()
+    if "-" not in matchid:
+        return None
+    tourney_id, num = matchid.rsplit("-", 1)
+    if not tourney_id or not num.isdigit():
+        return None
+    return tourney_id, int(num)
+
+
+def parse_ta_match_row(
+    m: dict[str, str],
+    player: CollectedPlayer,
+    tour: str,
+    policy: AcceptancePolicy,
+) -> tuple[dict[str, Any] | None, str]:
     """Converte um dicionário matchhead em uma linha bruta Sackmann.
 
-    Retorna (row_dict, validation_status). Se incompleto, row_dict pode ser None ou vir
-    marcado para descarte.
-    """
-    wl = m.get("wl", "").strip().upper()
-    opp = m.get("opp", "").strip()
-    score = m.get("score", "").strip()
-    date_str = m.get("date", "").strip()
-    tourn = m.get("tourn", "").strip()
-
-    if not wl or not opp or not date_str:
+    Retorna (row_dict, "VALID") ou (None, motivo_da_rejeição). O lado do
+    jogador coletado já vem com id; o lado do adversário fica com id None
+    (resolvido depois, em lote)."""
+    wl = (m.get("wl") or "").strip().upper()
+    opp = _clean(m.get("opp"))
+    date_str = _clean(m.get("date"))
+    if wl not in ("W", "L") or not opp or not date_str:
         return None, "MISSING_METADATA"
 
-    is_winner = (wl == "W")
-    winner_name = player_name if is_winner else opp
-    loser_name = opp if is_winner else player_name
+    if not _clean(m.get("matchid")):
+        return None, "MISSING_MATCHID"
+    parsed_id = parse_matchid(m["matchid"])
+    if parsed_id is None:
+        return None, "INVALID_MATCHID"
+    tourney_id, match_num = parsed_id
+
+    tourney_date = _safe_int(date_str)
+    if tourney_date is None or len(date_str) != 8:
+        return None, "INVALID_DATE"
+
+    level = _clean(m.get("level"))
+    if level is None:
+        return None, "MISSING_LEVEL"
+    if level not in policy.levels:
+        return None, f"LEVEL_OUT_OF_POLICY:{level}"
+
+    rnd = _clean(m.get("round"))
+    if rnd is None:
+        return None, "MISSING_ROUND"
+    if rnd not in policy.rounds:
+        return None, f"ROUND_OUT_OF_POLICY:{rnd}"
+
+    best_of = _safe_int(m.get("max"))
+    if best_of not in VALID_BEST_OF:
+        return None, "INVALID_BEST_OF"
+
+    surface = _clean(m.get("surf"))
+    if surface is None:
+        return None, "MISSING_SURFACE"
+
+    score = _clean(m.get("score"))
+    if score is None:
+        return None, "MISSING_SCORE"
+
+    is_winner = wl == "W"
+    own, opp_side = ("winner", "loser") if is_winner else ("loser", "winner")
 
     # Mapeamento dos 9 campos críticos (winner e loser)
     # Regra absoluta: se qualquer um dos 9 campos for None ou vazio, rejeitar.
@@ -80,54 +174,71 @@ def parse_ta_match_row(m: dict[str, str], player_name: str, tour: str) -> tuple[
         "l_bpFaced": _safe_int(m.get("ochances" if is_winner else "chances")),
     }
 
-    # Validação dos 9 campos
     missing_fields = [k for k, v in raw_stats.items() if v is None]
     if missing_fields:
         return None, f"INCOMPLETE_STATS:{','.join(missing_fields)}"
 
-    # Parse de matchid (ex: 2026-560-223)
-    matchid = m.get("matchid", "")
-    tourney_id = ""
-    match_num = _safe_int(m.get("matchnum")) or 1
-    if matchid:
-        parts = matchid.split("-")
-        if len(parts) >= 3:
-            tourney_id = f"{parts[0]}-{parts[1]}"
-            match_num = _safe_int(parts[2]) or match_num
-        else:
-            tourney_id = matchid
-    else:
-        tourney_id = f"{date_str[:4]}-TA"
-
-    try:
-        tourney_date = int(date_str)
-    except ValueError:
-        return None, "INVALID_DATE"
-
     row = {
         "tour": tour.upper(),
         "tourney_id": tourney_id,
-        "tourney_name": tourn,
-        "surface": m.get("surf", "Hard"),
-        "tourney_level": m.get("level", "A"),
+        "tourney_name": _clean(m.get("tourn")),
+        "surface": surface,
+        "tourney_level": level,
         "tourney_date": tourney_date,
         "match_num": match_num,
-        "round": m.get("round", "R32"),
-        "best_of": 3,
+        "round": rnd,
+        "best_of": best_of,
         "minutes": _safe_int(m.get("time")),
         "score": score,
-        "winner_name": winner_name,
-        "winner_hand": m.get("ohand", "R") if not is_winner else "R",
-        "winner_rank": _safe_int(m.get("rank" if is_winner else "orank")),
-        "winner_rank_points": None,
-        "loser_name": loser_name,
-        "loser_hand": m.get("ohand", "R") if is_winner else "R",
-        "loser_rank": _safe_int(m.get("orank" if is_winner else "rank")),
-        "loser_rank_points": None,
+        f"{own}_id": player.player_id.split("-", 1)[1],
+        f"{own}_name": player.name,
+        f"{own}_hand": player.hand,
+        f"{own}_rank": _safe_int(m.get("rank")),
+        f"{own}_rank_points": None,
+        f"{own}_resolution_method": COLLECTED_METHOD,
+        f"{opp_side}_id": None,
+        f"{opp_side}_name": opp,
+        f"{opp_side}_hand": _clean(m.get("ohand")),
+        f"{opp_side}_rank": _safe_int(m.get("orank")),
+        f"{opp_side}_rank_points": None,
+        f"{opp_side}_resolution_method": None,
+        "_opp_side": opp_side,
         **raw_stats,
     }
-
     return row, "VALID"
+
+
+def _match_signature(row: dict[str, Any]) -> tuple:
+    return (row["score"], *(row[c] for c in CRITICAL_STAT_FIELDS))
+
+
+def _collected_player(p_info: dict, players_idx: pd.DataFrame) -> CollectedPlayer | None:
+    pid = p_info.get("player_id")
+    if not pid or pid not in players_idx.index:
+        return None
+    rec = players_idx.loc[pid]
+    hand = rec["hand"]
+    return CollectedPlayer(player_id=pid, name=str(rec["name"]), hand=None if pd.isna(hand) else str(hand))
+
+
+def _resolve_opponents(raw_df: pd.DataFrame, players_df: pd.DataFrame) -> pd.DataFrame:
+    """Preenche o lado do adversário ainda sem id: exact/alias usam o id e a mão
+    da base; fuzzy_review/unresolved recebem id `NEW-` (identity_new) e ficam
+    com a mão informada pelo TA (ou NA)."""
+    out = raw_df.copy()
+    hand_by_raw = players_df.drop_duplicates("player_id_raw").set_index("player_id_raw")["hand"]
+    for side in ("winner", "loser"):
+        pending = (out["_opp_side"] == side) & out[f"{side}_id"].isna()
+        if not pending.any():
+            continue
+        res = ident_new.resolve_player_names(out.loc[pending, f"{side}_name"], players_df)
+        out.loc[pending, f"{side}_id"] = res["id_raw"]
+        out.loc[pending, f"{side}_resolution_method"] = res["method"]
+        trusted = res["method"].isin(ident_new.TRUSTED_METHODS)
+        base_hand = res["id_raw"].map(hand_by_raw)
+        use_base = trusted & base_hand.notna()
+        out.loc[use_base[use_base].index, f"{side}_hand"] = base_hand[use_base]
+    return out.drop(columns=["_opp_side"])
 
 
 def process_tennis_abstract_matches(
@@ -135,61 +246,80 @@ def process_tennis_abstract_matches(
     tour: str,
     cutoff_date: str = "2026-05-25",
     players_df: pd.DataFrame | None = None,
+    policy: AcceptancePolicy | None = None,
 ) -> dict[str, Any]:
-    """Recebe payloads de jogadores do Tennis Abstract, filtra pós-cutoff,
+    """Recebe payloads de jogadores do Tennis Abstract (cada um com
+    `player.player_id`), filtra pós-cutoff, valida, deduplica por `match_id`
+    e normaliza no schema Sackmann.
 
-    valida os 9 campos, deduplica e normaliza no schema Sackmann.
-    """
+    Retorna também `per_player`: {player_id: {n_post_cutoff, n_valid,
+    n_duplicate, rejected_reasons}} para a freshness por jogador (T7)."""
     tour_clean = tour.upper()
     cutoff_int = int(cutoff_date.replace("-", ""))
 
-    valid_rows: list[dict[str, Any]] = []
-    seen_context_keys: set[str] = set()
+    if players_df is None:
+        players_df, _ = load_players(tour_clean.lower())
+    if policy is None:
+        policy = load_acceptance_policy(tour_clean)
+    players_idx = players_df.drop_duplicates("player_id").set_index("player_id")
+
+    rows_by_match: dict[str, dict[str, Any]] = {}
     rejected_reasons: dict[str, int] = {}
+    per_player: dict[str, dict[str, Any]] = {}
     post_cutoff_count = 0
-    pre_cutoff_count = 0
+
+    def _reject(stats: dict, reason: str) -> None:
+        rejected_reasons[reason] = rejected_reasons.get(reason, 0) + 1
+        stats["rejected_reasons"][reason] = stats["rejected_reasons"].get(reason, 0) + 1
 
     for payload in raw_payloads:
         p_info = payload.get("player", {})
-        p_name = p_info.get("name", "")
-        p_tour = p_info.get("tour", tour_clean).upper()
-        if p_tour != tour_clean:
+        if p_info.get("tour", tour_clean).upper() != tour_clean:
             continue
+        key = p_info.get("player_id") or f"UNKNOWN:{p_info.get('name', '')}"
+        stats = per_player.setdefault(
+            key, {"n_post_cutoff": 0, "n_valid": 0, "n_duplicate": 0, "rejected_reasons": {}},
+        )
+        player = _collected_player(p_info, players_idx)
 
         for m in payload.get("matches", []):
-            dt_str = m.get("date", "")
-            try:
-                dt_int = int(dt_str)
-            except (ValueError, TypeError):
-                continue
-
-            if dt_int <= cutoff_int:
-                pre_cutoff_count += 1
+            dt_int = _safe_int(m.get("date"))
+            if dt_int is None or dt_int <= cutoff_int:
                 continue
 
             post_cutoff_count += 1
-            row, status = parse_ta_match_row(m, p_name, tour_clean)
+            stats["n_post_cutoff"] += 1
+            if player is None:
+                _reject(stats, "UNKNOWN_PLAYER_ID")
+                continue
+
+            row, status = parse_ta_match_row(m, player, tour_clean, policy)
             if status != "VALID" or row is None:
-                rejected_reasons[status] = rejected_reasons.get(status, 0) + 1
+                _reject(stats, status)
                 continue
 
-            ctx_key = match_context_key(
-                tour=tour_clean,
-                date=str(row["tourney_date"]),
-                tourn=row["tourney_name"],
-                player_a=row["winner_name"],
-                player_b=row["loser_name"],
-                score=row["score"],
-            )
-            if ctx_key in seen_context_keys:
-                rejected_reasons["DUPLICATE_CROSS_PLAYER"] = (
-                    rejected_reasons.get("DUPLICATE_CROSS_PLAYER", 0) + 1
-                )
+            match_id = f"{tour_clean}:{row['tourney_id']}:{row['match_num']}"
+            seen = rows_by_match.get(match_id)
+            if seen is not None:
+                stats["n_duplicate"] += 1
+                _reject(stats, "DUPLICATE_CROSS_PLAYER")
+                if _match_signature(seen) != _match_signature(row):
+                    _reject(stats, "DUPLICATE_CONFLICT")
+                # a mesma partida vista pela página do adversário: o id dele é
+                # conhecido, então dispensa a resolução por nome
+                opp_side = seen["_opp_side"]
+                own_id = player.player_id.split("-", 1)[1]
+                if seen[f"{opp_side}_id"] is None and own_id not in (seen["winner_id"], seen["loser_id"]):
+                    seen[f"{opp_side}_id"] = own_id
+                    seen[f"{opp_side}_name"] = player.name
+                    seen[f"{opp_side}_hand"] = player.hand
+                    seen[f"{opp_side}_resolution_method"] = COLLECTED_METHOD
                 continue
-            seen_context_keys.add(ctx_key)
 
-            valid_rows.append(row)
+            rows_by_match[match_id] = row
+            stats["n_valid"] += 1
 
+    valid_rows = list(rows_by_match.values())
     if not valid_rows:
         return {
             "raw_df": pd.DataFrame(),
@@ -198,26 +328,21 @@ def process_tennis_abstract_matches(
             "valid_count": 0,
             "rejected_count": sum(rejected_reasons.values()),
             "rejected_reasons": rejected_reasons,
+            "per_player": per_player,
         }
 
-    raw_df = pd.DataFrame(valid_rows)
-
-    if players_df is None:
-        players_df, _ = load_players(tour_clean.lower())
-
-    # Resolver identidade de jogadores
-    resolved_df = ident_new.resolve_incremental_players(raw_df, tour_clean, players_df)
+    raw_df = _resolve_opponents(pd.DataFrame(valid_rows), players_df)
 
     # Normalizar usando transform_raw_matches (gera as 2 perspectivas por partida)
-    transform_result = transform_raw_matches(resolved_df, tour_clean)
+    transform_result = transform_raw_matches(raw_df, tour_clean)
     transformed_df = transform_result["table"]
 
     return {
-        "raw_df": resolved_df,
+        "raw_df": raw_df,
         "transformed_df": transformed_df,
         "total_post_cutoff": post_cutoff_count,
         "valid_count": len(valid_rows),
         "rejected_count": sum(rejected_reasons.values()),
         "rejected_reasons": rejected_reasons,
+        "per_player": per_player,
     }
-
