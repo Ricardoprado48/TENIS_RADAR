@@ -52,14 +52,45 @@ class TestLiveTennisClient(unittest.TestCase):
         self.assertEqual(
             kwargs["params"],
             {
-                "status": "upcoming",
                 "tour": "atp",
+                "draw": "singles",
+                "limit": 50,
+                "offset": 0,
+                "status": "upcoming",
+            },
+        )
+        self.assertEqual(kwargs["headers"]["Authorization"], "Bearer test-key")
+
+    def test_fetches_fixtures_only_as_schedule_metadata(self):
+        session = Mock()
+        session.get.return_value = _FakeResponse(
+            {
+                "data": [
+                    {
+                        "id": 36555,
+                        "match_id": 195443,
+                        "event_date": "2026-09-25",
+                        "status": "finished",
+                    }
+                ],
+                "meta": {"has_more": False},
+            }
+        )
+
+        client = LiveTennisClient(api_key="test-key", session=session)
+        rows = client.list_fixtures_singles("WTA")
+
+        self.assertEqual(rows[0]["event_date"], "2026-09-25")
+        _args, kwargs = session.get.call_args
+        self.assertEqual(
+            kwargs["params"],
+            {
+                "tour": "wta",
                 "draw": "singles",
                 "limit": 50,
                 "offset": 0,
             },
         )
-        self.assertEqual(kwargs["headers"]["Authorization"], "Bearer test-key")
 
     def test_paginates_using_returned_row_count(self):
         session = Mock()
