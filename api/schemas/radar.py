@@ -59,3 +59,8 @@ class RadarLine(BaseModel):
     staleness_status: str | None = None
     staleness_days: int | None = None
     historical_data_cutoff: date | None = None
+
+    # LOTE J — Overlay Tennis Abstract
+    effective_data_cutoff: date | None = None
+    overlay_status: str | None = None
+

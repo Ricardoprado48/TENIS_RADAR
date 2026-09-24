@@ -1,4 +1,4 @@
-# LOTE I -- Launcher local. So sobe/derruba processos (FastAPI + Vite dev
+﻿# LOTE I -- Launcher local. So sobe/derruba processos (FastAPI + Vite dev
 # server) e abre o navegador. Nao altera radar, odds, screenshot_parser,
 # forward test ou calendario.
 
@@ -127,3 +127,4 @@ Write-Host "  Backend:  $BackendHealthUrl"
 Write-Host "  Logs:     $RuntimeDir"
 Write-Host "`nPara encerrar, execute ENCERRAR_TENNIS_RADAR.bat"
 exit 0
+

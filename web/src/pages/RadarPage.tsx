@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { getRadarToday } from "../services/api";
 import type { DecisionState, RadarLine } from "../types/api";
-import { DECISION_LABEL, MARKET_LABEL, formatOdds, formatProbability, sideLabel } from "../lib/radar";
+import { DECISION_LABEL, MARKET_LABEL, formatLine, formatOdds, formatProbability, sideLabel } from "../lib/radar";
 
 type LoadState = "loading" | "loaded" | "offline";
 
@@ -15,10 +15,27 @@ function formatTime(iso: string | null): string {
   }).format(new Date(iso));
 }
 
+
 function lineLabel(line: RadarLine): string {
+  const suffix = `${sideLabel(line.side)} ${formatLine(line.line)}`;
+
+  if (line.market === "aces_player" && line.player) {
+    return `${line.player} — ${suffix} aces`;
+  }
+
+  if (line.market === "total_aces_match") {
+    return `Total da partida — ${suffix} aces`;
+  }
+
+  if (line.market === "double_faults_player" && line.player) {
+    return `${line.player} — ${suffix} duplas faltas`;
+  }
+
   const market = MARKET_LABEL[line.market];
-  const suffix = `${sideLabel(line.side)} ${line.line}`;
-  return line.player ? `${line.player} — ${market} ${suffix}` : `${market} ${suffix}`;
+
+  return line.player
+    ? `${line.player} — ${suffix} ${market.toLowerCase()}`
+    : `${suffix} ${market.toLowerCase()}`;
 }
 
 function RadarCard({ line }: { line: RadarLine }) {
@@ -39,6 +56,14 @@ function RadarCard({ line }: { line: RadarLine }) {
         <span>Probabilidade: {formatProbability(line.probability)}</span>
         <span>Odd justa: {formatOdds(line.fair_odds)}</span>
         <span>Odd mínima: {formatOdds(line.minimum_odds)}</span>
+      </div>
+
+      <div className="mt-2 text-xs text-mist">
+        {line.effective_data_cutoff && line.effective_data_cutoff > (line.historical_data_cutoff || "2026-05-25") ? (
+          <span>Dados do jogador atualizados até: {formatCutoffDate(line.effective_data_cutoff)}</span>
+        ) : (
+          <span>Dados recentes indisponíveis — Base histórica até 25/05/2026</span>
+        )}
       </div>
 
       <p className="mt-3 text-xs uppercase tracking-wide text-mist">{DECISION_LABEL[line.decision_state]}</p>

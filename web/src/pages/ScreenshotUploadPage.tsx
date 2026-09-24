@@ -22,7 +22,7 @@ import type {
   RadarLine,
   TabType,
 } from "../types/api";
-import { EVALUATION_LABEL_TEXT, MARKET_LABEL, formatOdds, formatProbability, sideLabel } from "../lib/radar";
+import { EVALUATION_LABEL_TEXT, MARKET_LABEL, formatLine, formatOdds, formatProbability, sideLabel } from "../lib/radar";
 
 type ContextState = "loading" | "loaded" | "offline";
 type SendState = "idle" | "uploading" | "success" | "error";
@@ -75,9 +75,25 @@ function formatTime(iso: string | null): string {
   }).format(new Date(iso));
 }
 
+
 function marketLine(line: RadarLine): string {
-  const suffix = `${sideLabel(line.side)} ${line.line}`;
-  return line.player ? `${line.player} — ${MARKET_LABEL[line.market]} ${suffix}` : `${MARKET_LABEL[line.market]} ${suffix}`;
+  const suffix = `${sideLabel(line.side)} ${formatLine(line.line)}`;
+
+  if (line.market === "aces_player" && line.player) {
+    return `${line.player} — ${suffix} aces`;
+  }
+
+  if (line.market === "total_aces_match") {
+    return `Total da partida — ${suffix} aces`;
+  }
+
+  if (line.market === "double_faults_player" && line.player) {
+    return `${line.player} — ${suffix} duplas faltas`;
+  }
+
+  return line.player
+    ? `${line.player} — ${suffix} ${MARKET_LABEL[line.market].toLowerCase()}`
+    : `${suffix} ${MARKET_LABEL[line.market].toLowerCase()}`;
 }
 
 export default function ScreenshotUploadPage() {
@@ -419,7 +435,7 @@ export default function ScreenshotUploadPage() {
                     <div key={i} className="border border-rule p-3 text-sm">
                       <p className="text-xs uppercase tracking-wide text-mist">
                         {EXTRACTION_MARKET_LABEL[m.market]}
-                        {m.side ? ` · ${sideLabel(m.side.toLowerCase())} ${m.model_line ?? ""}` : ""}
+                        {m.side ? ` · ${sideLabel(m.side.toLowerCase())} ${formatLine(m.model_line)}` : ""}
                       </p>
 
                       {confirmState === "confirmed" ? (

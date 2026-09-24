@@ -32,7 +32,7 @@ jogadores com o mesmo texto/ordem).
 
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 
 import pandas as pd
 
@@ -40,6 +40,8 @@ from src.calendar.manual_provider import ManualFileCalendarProvider
 from src.calendar.match_key import build_match_key
 from src.decision import staleness_policy
 from src.odds import pricing_compare
+from src.incremental import config as inc_cfg
+from src.incremental import overlay as ta_overlay
 from src.pricing import config as pricing_cfg
 from src.radar import config as radar_cfg
 
@@ -117,14 +119,32 @@ def _match_context_map(resolved: pd.DataFrame) -> dict[str, dict]:
     return out
 
 
-def _calendar_datetimes_by_key() -> dict[str, datetime]:
-    """Cruza pelo match_key compartilhado (LOTE C) -- nunca reimplementa a
-    leitura/validacao de agenda_*.csv, so consome ManualFileCalendarProvider
-    ja existente. Janela de data ampla (date.min..date.max) porque o
-    cruzamento e por conteudo (match_key), nao por periodo."""
+def _now_utc() -> datetime:
+    """Relogio isolado para permitir teste deterministico."""
+    return datetime.now(timezone.utc)
+
+
+def _active_calendar_datetimes_by_key() -> dict[str, datetime]:
+    """Partidas operacionais ainda validas no calendario.
+
+    O calendario e a fonte de verdade operacional do Radar:
+    - futuro, proximo e iniciado permanecem elegiveis;
+    - encerrado nao aparece;
+    - partida ausente da agenda tambem nao aparece.
+
+    Nenhum dado historico do Phase 8 e apagado.
+    """
     provider = ManualFileCalendarProvider()
-    matches = provider.list_matches(date.min, date.max)
-    return {m.match_key: m.event_datetime_sao_paulo for m in matches}
+    matches = provider.list_matches(
+        date.min,
+        date.max,
+        now=_now_utc(),
+    )
+    return {
+        m.match_key: m.event_datetime_sao_paulo
+        for m in matches
+        if m.status != "encerrado"
+    }
 
 
 def _staleness_by_tour() -> dict[str, dict]:
@@ -181,7 +201,7 @@ def get_radar_lines() -> list[RadarLine]:
     prices = _dedupe_match_level_markets(prices)
 
     match_context = _match_context_map(_load_resolved_matches())
-    calendar_datetimes = _calendar_datetimes_by_key()
+    calendar_datetimes = _active_calendar_datetimes_by_key()
     staleness = _staleness_by_tour()
     min_odds_map = _min_odds_by_key(_load_parquet(radar_cfg.PHASE8_DIR / "odds_minimas_por_edge.parquet"))
 
@@ -191,6 +211,12 @@ def get_radar_lines() -> list[RadarLine]:
         if ctx is None:
             # Nunca deveria acontecer (precos so existem para partidas
             # usaveis/nao-duplicadas), mas nunca inventa contexto se faltar.
+            continue
+
+        # O calendario e a fonte de verdade operacional.
+        # Ausente ou encerrado => nao pertence ao radar atual.
+        event_datetime = calendar_datetimes.get(ctx["match_key"])
+        if event_datetime is None:
             continue
 
         blockers = _blockers_list(row.candidate_blockers)
@@ -215,6 +241,17 @@ def get_radar_lines() -> list[RadarLine]:
         odd_minima_por_edge = {label: edge_odds.get(label) for label in _EDGE_LABELS}
 
         tour_staleness = staleness.get(row.tour, {})
+        base_cutoff = tour_staleness.get("historical_data_cutoff")
+
+        # Overlay Tennis Abstract (LOTE J)
+        if inc_cfg.TA_OVERLAY_ENABLED and player_display:
+            p_freshness = ta_overlay.get_player_freshness(player_display, row.tour)
+            eff_cutoff_str = p_freshness.get("effective_data_cutoff")
+            effective_data_cutoff = pd.to_datetime(eff_cutoff_str).date() if eff_cutoff_str else base_cutoff
+            overlay_status = p_freshness.get("freshness_status")
+        else:
+            effective_data_cutoff = base_cutoff
+            overlay_status = "BASE_ONLY" if not inc_cfg.TA_OVERLAY_ENABLED else "BASE_ONLY"
 
         lines.append(RadarLine(
             match_key=ctx["match_key"],
@@ -225,7 +262,7 @@ def get_radar_lines() -> list[RadarLine]:
             surface=row.surface,
             player_a=ctx["player_a"],
             player_b=ctx["player_b"],
-            event_datetime_sao_paulo=calendar_datetimes.get(ctx["match_key"]),
+            event_datetime_sao_paulo=event_datetime,
             market=row.market,
             player=player_display,
             side=row.side,
@@ -245,6 +282,8 @@ def get_radar_lines() -> list[RadarLine]:
             resolution_method_opponent=_nan_to_none(row.resolution_method_opponent),
             staleness_status=tour_staleness.get("staleness_status"),
             staleness_days=tour_staleness.get("staleness_days"),
-            historical_data_cutoff=tour_staleness.get("historical_data_cutoff"),
+            historical_data_cutoff=base_cutoff,
+            effective_data_cutoff=effective_data_cutoff,
+            overlay_status=overlay_status,
         ))
     return lines

@@ -58,10 +58,27 @@ COMPARISON_CSV = INCREMENTAL_OUTPUT_DIR / "comparacao_radar_antes_depois.csv"
 # silenciosamente o id de um jogador existente (ver src.incremental.identity_new).
 NEW_PLAYER_ID_PREFIX = "NEW"
 
+# ==============================================================================
+# LOTE J — TENNIS ABSTRACT INCREMENTAL OVERLAY
+# ==============================================================================
+import os
+
+TA_CACHE_DIR = DATA_RAW / "tennis_abstract_cache"
+TA_OVERLAY_DIR = DATA_PROCESSED / "incremental_overlays" / "tennis_abstract"
+TA_AUDIT_LOG_PATH = TA_OVERLAY_DIR / "update_audit_log.jsonl"
+
+TA_BASE_CUTOFF = "2026-05-25"
+TA_CACHE_TTL_HOURS = float(os.environ.get("TENNIS_RADAR_TA_CACHE_TTL_HOURS", "24.0"))
+TA_REQUEST_DELAY_SECONDS = float(os.environ.get("TENNIS_RADAR_TA_REQUEST_DELAY_SECONDS", "2.5"))
+TA_OVERLAY_ENABLED = os.environ.get("TENNIS_RADAR_TA_OVERLAY_ENABLED", "false").lower() in ("1", "true", "yes")
+
 __all__ = [
     "TOURS", "DATA_RAW", "DATA_PROCESSED", "RAW_DIRS", "PROCESSED_DIRS",
     "INCREMENTAL_RAW_DIR", "INCREMENTAL_OUTPUT_DIR", "INCREMENTAL_PROCESSED_DIR",
     "PHASE8_OUTPUT_DIR", "RAW_SCHEMA_COLUMNS", "STAT_COLUMNS", "RESULT_ONLY_COLUMNS",
     "MANIFEST_JSON", "INVESTIGATION_JSON", "INVESTIGATION_MD",
     "SUMMARY_JSON", "COVERAGE_CSV", "COMPARISON_CSV", "NEW_PLAYER_ID_PREFIX",
+    "TA_CACHE_DIR", "TA_OVERLAY_DIR", "TA_AUDIT_LOG_PATH", "TA_BASE_CUTOFF",
+    "TA_CACHE_TTL_HOURS", "TA_REQUEST_DELAY_SECONDS", "TA_OVERLAY_ENABLED",
 ]
+

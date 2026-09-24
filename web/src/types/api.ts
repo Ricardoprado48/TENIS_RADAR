@@ -82,6 +82,10 @@ export interface RadarLine {
   staleness_status: string | null;
   staleness_days: number | null;
   historical_data_cutoff: string | null;
+
+  // LOTE J — Overlay Tennis Abstract
+  effective_data_cutoff?: string | null;
+  overlay_status?: string | null;
 }
 
 // Espelha api/schemas/screenshots.py (LOTE E). ScreenshotUploadResponse

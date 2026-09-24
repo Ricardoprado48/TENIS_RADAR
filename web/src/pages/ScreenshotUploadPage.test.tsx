@@ -83,7 +83,7 @@ describe("ScreenshotUploadPage", () => {
     renderPage();
 
     await waitForHeader();
-    expect(screen.getByText(/Sebastian Baez — Aces Over 5.5/)).toBeInTheDocument();
+    expect(screen.getByText(/Sebastian Baez — Mais de 5,5 aces/)).toBeInTheDocument();
   });
 
   it("comeca sem imagem selecionada e com o envio desabilitado", async () => {

@@ -110,8 +110,8 @@ describe("RadarPage", () => {
     expect(screen.getByText("Observar (1)")).toBeInTheDocument();
     expect(screen.getByText("Descartados (1)")).toBeInTheDocument();
 
-    expect(screen.getByText(/Sebastian Baez — Aces Over 5.5/)).toBeInTheDocument();
-    expect(screen.getByText(/Jenson Brooksby — Aces Over 9.5/)).toBeInTheDocument();
+    expect(screen.getByText(/Sebastian Baez — Mais de 5,5 aces/)).toBeInTheDocument();
+    expect(screen.getByText(/Jenson Brooksby — Mais de 9,5 aces/)).toBeInTheDocument();
     // DESCARTADOS fica dentro de um <details> fechado por padrao (o
     // conteudo continua no DOM -- so nao aberto).
     const descartadosSummary = screen.getByText("Descartados (1)");
@@ -123,7 +123,7 @@ describe("RadarPage", () => {
 
     renderPage();
 
-    await waitFor(() => expect(screen.getByText(/Sebastian Baez — Aces Over 5.5/)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/Sebastian Baez — Mais de 5,5 aces/)).toBeInTheDocument());
     expect(screen.getByText(/Probabilidade: 24,5%/)).toBeInTheDocument();
     expect(screen.getByText(/Odd justa: 4,09/)).toBeInTheDocument();
     expect(screen.getByText(/Odd mínima: 4,35/)).toBeInTheDocument();
@@ -134,7 +134,7 @@ describe("RadarPage", () => {
 
     renderPage();
 
-    await waitFor(() => expect(screen.getByText(/Sebastian Baez — Aces Over 5.5/)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/Sebastian Baez — Mais de 5,5 aces/)).toBeInTheDocument());
     expect(screen.getByText(/Odd justa: não disponível/)).toBeInTheDocument();
     expect(screen.getByText(/Odd mínima: não disponível/)).toBeInTheDocument();
   });
@@ -146,7 +146,7 @@ describe("RadarPage", () => {
 
     renderPage();
 
-    await waitFor(() => expect(screen.getByText(/Total de Aces Over 21.5/)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/Total da partida — Mais de 21,5 aces/)).toBeInTheDocument());
   });
 
   it("mostra o aviso de defasagem da base histórica sem escondê-lo", async () => {

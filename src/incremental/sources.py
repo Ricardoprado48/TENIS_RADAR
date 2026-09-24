@@ -36,6 +36,12 @@ from src.ingestion import github_source as gh
 from src.normalization.config import SOURCES
 
 from . import config as cfg
+from .tennis_abstract_source import (  # noqa: F401
+    TennisAbstractSource,
+    RateLimitError,
+    AccessForbiddenError,
+    PlayerNotFoundError,
+)
 
 ORIGINAL_REPOS = {
     "atp": "JeffSackmann/tennis_atp",

@@ -1,0 +1,2298 @@
+[
+  {
+    "tour": "ATP",
+    "player": "Carlos Alcaraz",
+    "opponent": "Otto Virtanen",
+    "date": "2026-04-13",
+    "tournament": "Barcelona",
+    "score": "6-4 6-2",
+    "all_exact": true,
+    "field_matches": {
+      "ace": {
+        "ta": 0,
+        "sackmann": 0,
+        "exact": true
+      },
+      "df": {
+        "ta": 3,
+        "sackmann": 3,
+        "exact": true
+      },
+      "svpt": {
+        "ta": 67,
+        "sackmann": 67,
+        "exact": true
+      },
+      "1stIn": {
+        "ta": 45,
+        "sackmann": 45,
+        "exact": true
+      },
+      "1stWon": {
+        "ta": 29,
+        "sackmann": 29,
+        "exact": true
+      },
+      "2ndWon": {
+        "ta": 12,
+        "sackmann": 12,
+        "exact": true
+      },
+      "SvGms": {
+        "ta": 9,
+        "sackmann": 9,
+        "exact": true
+      },
+      "bpSaved": {
+        "ta": 5,
+        "sackmann": 5,
+        "exact": true
+      },
+      "bpFaced": {
+        "ta": 6,
+        "sackmann": 6,
+        "exact": true
+      }
+    }
+  },
+  {
+    "tour": "ATP",
+    "player": "Carlos Alcaraz",
+    "opponent": "Jannik Sinner",
+    "date": "2026-04-05",
+    "tournament": "Monte Carlo Masters",
+    "score": "7-6(5) 6-3",
+    "all_exact": true,
+    "field_matches": {
+      "ace": {
+        "ta": 3,
+        "sackmann": 3,
+        "exact": true
+      },
+      "df": {
+        "ta": 5,
+        "sackmann": 5,
+        "exact": true
+      },
+      "svpt": {
+        "ta": 92,
+        "sackmann": 92,
+        "exact": true
+      },
+      "1stIn": {
+        "ta": 53,
+        "sackmann": 53,
+        "exact": true
+      },
+      "1stWon": {
+        "ta": 31,
+        "sackmann": 31,
+        "exact": true
+      },
+      "2ndWon": {
+        "ta": 22,
+        "sackmann": 22,
+        "exact": true
+      },
+      "SvGms": {
+        "ta": 10,
+        "sackmann": 10,
+        "exact": true
+      },
+      "bpSaved": {
+        "ta": 8,
+        "sackmann": 8,
+        "exact": true
+      },
+      "bpFaced": {
+        "ta": 11,
+        "sackmann": 11,
+        "exact": true
+      }
+    }
+  },
+  {
+    "tour": "ATP",
+    "player": "Carlos Alcaraz",
+    "opponent": "Valentin Vacherot",
+    "date": "2026-04-05",
+    "tournament": "Monte Carlo Masters",
+    "score": "6-4 6-4",
+    "all_exact": true,
+    "field_matches": {
+      "ace": {
+        "ta": 3,
+        "sackmann": 3,
+        "exact": true
+      },
+      "df": {
+        "ta": 3,
+        "sackmann": 3,
+        "exact": true
+      },
+      "svpt": {
+        "ta": 51,
+        "sackmann": 51,
+        "exact": true
+      },
+      "1stIn": {
+        "ta": 31,
+        "sackmann": 31,
+        "exact": true
+      },
+      "1stWon": {
+        "ta": 25,
+        "sackmann": 25,
+        "exact": true
+      },
+      "2ndWon": {
+        "ta": 12,
+        "sackmann": 12,
+        "exact": true
+      },
+      "SvGms": {
+        "ta": 10,
+        "sackmann": 10,
+        "exact": true
+      },
+      "bpSaved": {
+        "ta": 0,
+        "sackmann": 0,
+        "exact": true
+      },
+      "bpFaced": {
+        "ta": 1,
+        "sackmann": 1,
+        "exact": true
+      }
+    }
+  },
+  {
+    "tour": "ATP",
+    "player": "Carlos Alcaraz",
+    "opponent": "Alexander Bublik",
+    "date": "2026-04-05",
+    "tournament": "Monte Carlo Masters",
+    "score": "6-3 6-0",
+    "all_exact": true,
+    "field_matches": {
+      "ace": {
+        "ta": 3,
+        "sackmann": 3,
+        "exact": true
+      },
+      "df": {
+        "ta": 2,
+        "sackmann": 2,
+        "exact": true
+      },
+      "svpt": {
+        "ta": 44,
+        "sackmann": 44,
+        "exact": true
+      },
+      "1stIn": {
+        "ta": 25,
+        "sackmann": 25,
+        "exact": true
+      },
+      "1stWon": {
+        "ta": 17,
+        "sackmann": 17,
+        "exact": true
+      },
+      "2ndWon": {
+        "ta": 11,
+        "sackmann": 11,
+        "exact": true
+      },
+      "SvGms": {
+        "ta": 7,
+        "sackmann": 7,
+        "exact": true
+      },
+      "bpSaved": {
+        "ta": 1,
+        "sackmann": 1,
+        "exact": true
+      },
+      "bpFaced": {
+        "ta": 2,
+        "sackmann": 2,
+        "exact": true
+      }
+    }
+  },
+  {
+    "tour": "ATP",
+    "player": "Jannik Sinner",
+    "opponent": "Juan Manuel Cerundolo",
+    "date": "2026-05-25",
+    "tournament": "Roland Garros",
+    "score": "3-6 2-6 7-5 6-1 6-1",
+    "all_exact": true,
+    "field_matches": {
+      "ace": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "df": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "svpt": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "1stIn": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "1stWon": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "2ndWon": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "SvGms": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "bpSaved": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "bpFaced": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      }
+    }
+  },
+  {
+    "tour": "ATP",
+    "player": "Jannik Sinner",
+    "opponent": "Clement Tabur",
+    "date": "2026-05-25",
+    "tournament": "Roland Garros",
+    "score": "6-1 6-3 6-4",
+    "all_exact": true,
+    "field_matches": {
+      "ace": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "df": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "svpt": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "1stIn": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "1stWon": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "2ndWon": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "SvGms": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "bpSaved": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "bpFaced": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      }
+    }
+  },
+  {
+    "tour": "ATP",
+    "player": "Jannik Sinner",
+    "opponent": "Casper Ruud",
+    "date": "2026-05-06",
+    "tournament": "Rome Masters",
+    "score": "6-4 6-4",
+    "all_exact": true,
+    "field_matches": {
+      "ace": {
+        "ta": 2,
+        "sackmann": 2,
+        "exact": true
+      },
+      "df": {
+        "ta": 0,
+        "sackmann": 0,
+        "exact": true
+      },
+      "svpt": {
+        "ta": 55,
+        "sackmann": 55,
+        "exact": true
+      },
+      "1stIn": {
+        "ta": 35,
+        "sackmann": 35,
+        "exact": true
+      },
+      "1stWon": {
+        "ta": 29,
+        "sackmann": 29,
+        "exact": true
+      },
+      "2ndWon": {
+        "ta": 10,
+        "sackmann": 10,
+        "exact": true
+      },
+      "SvGms": {
+        "ta": 10,
+        "sackmann": 10,
+        "exact": true
+      },
+      "bpSaved": {
+        "ta": 1,
+        "sackmann": 1,
+        "exact": true
+      },
+      "bpFaced": {
+        "ta": 2,
+        "sackmann": 2,
+        "exact": true
+      }
+    }
+  },
+  {
+    "tour": "ATP",
+    "player": "Jannik Sinner",
+    "opponent": "Daniil Medvedev",
+    "date": "2026-05-06",
+    "tournament": "Rome Masters",
+    "score": "6-2 5-7 6-4",
+    "all_exact": true,
+    "field_matches": {
+      "ace": {
+        "ta": 7,
+        "sackmann": 7,
+        "exact": true
+      },
+      "df": {
+        "ta": 2,
+        "sackmann": 2,
+        "exact": true
+      },
+      "svpt": {
+        "ta": 92,
+        "sackmann": 92,
+        "exact": true
+      },
+      "1stIn": {
+        "ta": 55,
+        "sackmann": 55,
+        "exact": true
+      },
+      "1stWon": {
+        "ta": 41,
+        "sackmann": 41,
+        "exact": true
+      },
+      "2ndWon": {
+        "ta": 22,
+        "sackmann": 22,
+        "exact": true
+      },
+      "SvGms": {
+        "ta": 15,
+        "sackmann": 15,
+        "exact": true
+      },
+      "bpSaved": {
+        "ta": 5,
+        "sackmann": 5,
+        "exact": true
+      },
+      "bpFaced": {
+        "ta": 7,
+        "sackmann": 7,
+        "exact": true
+      }
+    }
+  },
+  {
+    "tour": "ATP",
+    "player": "Jannik Sinner",
+    "opponent": "Andrey Rublev",
+    "date": "2026-05-06",
+    "tournament": "Rome Masters",
+    "score": "6-2 6-4",
+    "all_exact": true,
+    "field_matches": {
+      "ace": {
+        "ta": 4,
+        "sackmann": 4,
+        "exact": true
+      },
+      "df": {
+        "ta": 2,
+        "sackmann": 2,
+        "exact": true
+      },
+      "svpt": {
+        "ta": 57,
+        "sackmann": 57,
+        "exact": true
+      },
+      "1stIn": {
+        "ta": 28,
+        "sackmann": 28,
+        "exact": true
+      },
+      "1stWon": {
+        "ta": 21,
+        "sackmann": 21,
+        "exact": true
+      },
+      "2ndWon": {
+        "ta": 17,
+        "sackmann": 17,
+        "exact": true
+      },
+      "SvGms": {
+        "ta": 9,
+        "sackmann": 9,
+        "exact": true
+      },
+      "bpSaved": {
+        "ta": 2,
+        "sackmann": 2,
+        "exact": true
+      },
+      "bpFaced": {
+        "ta": 3,
+        "sackmann": 3,
+        "exact": true
+      }
+    }
+  },
+  {
+    "tour": "ATP",
+    "player": "Novak Djokovic",
+    "opponent": "Joao Fonseca",
+    "date": "2026-05-25",
+    "tournament": "Roland Garros",
+    "score": "4-6 4-6 6-3 7-5 7-5",
+    "all_exact": true,
+    "field_matches": {
+      "ace": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "df": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "svpt": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "1stIn": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "1stWon": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "2ndWon": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "SvGms": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "bpSaved": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "bpFaced": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      }
+    }
+  },
+  {
+    "tour": "ATP",
+    "player": "Novak Djokovic",
+    "opponent": "Valentin Royer",
+    "date": "2026-05-25",
+    "tournament": "Roland Garros",
+    "score": "6-3 6-2 6-7(7) 6-3",
+    "all_exact": true,
+    "field_matches": {
+      "ace": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "df": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "svpt": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "1stIn": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "1stWon": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "2ndWon": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "SvGms": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "bpSaved": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "bpFaced": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      }
+    }
+  },
+  {
+    "tour": "ATP",
+    "player": "Novak Djokovic",
+    "opponent": "Giovanni Mpetshi Perricard",
+    "date": "2026-05-25",
+    "tournament": "Roland Garros",
+    "score": "5-7 7-5 6-1 6-4",
+    "all_exact": true,
+    "field_matches": {
+      "ace": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "df": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "svpt": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "1stIn": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "1stWon": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "2ndWon": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "SvGms": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "bpSaved": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "bpFaced": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      }
+    }
+  },
+  {
+    "tour": "ATP",
+    "player": "Novak Djokovic",
+    "opponent": "Dino Prizmic",
+    "date": "2026-05-06",
+    "tournament": "Rome Masters",
+    "score": "2-6 6-2 6-4",
+    "all_exact": true,
+    "field_matches": {
+      "ace": {
+        "ta": 0,
+        "sackmann": 0,
+        "exact": true
+      },
+      "df": {
+        "ta": 1,
+        "sackmann": 1,
+        "exact": true
+      },
+      "svpt": {
+        "ta": 68,
+        "sackmann": 68,
+        "exact": true
+      },
+      "1stIn": {
+        "ta": 43,
+        "sackmann": 43,
+        "exact": true
+      },
+      "1stWon": {
+        "ta": 30,
+        "sackmann": 30,
+        "exact": true
+      },
+      "2ndWon": {
+        "ta": 14,
+        "sackmann": 14,
+        "exact": true
+      },
+      "SvGms": {
+        "ta": 13,
+        "sackmann": 13,
+        "exact": true
+      },
+      "bpSaved": {
+        "ta": 3,
+        "sackmann": 3,
+        "exact": true
+      },
+      "bpFaced": {
+        "ta": 6,
+        "sackmann": 6,
+        "exact": true
+      }
+    }
+  },
+  {
+    "tour": "ATP",
+    "player": "Novak Djokovic",
+    "opponent": "Jack Draper",
+    "date": "2026-03-04",
+    "tournament": "Indian Wells Masters",
+    "score": "4-6 6-4 7-6(5)",
+    "all_exact": true,
+    "field_matches": {
+      "ace": {
+        "ta": 4,
+        "sackmann": 4,
+        "exact": true
+      },
+      "df": {
+        "ta": 2,
+        "sackmann": 2,
+        "exact": true
+      },
+      "svpt": {
+        "ta": 94,
+        "sackmann": 94,
+        "exact": true
+      },
+      "1stIn": {
+        "ta": 62,
+        "sackmann": 62,
+        "exact": true
+      },
+      "1stWon": {
+        "ta": 40,
+        "sackmann": 40,
+        "exact": true
+      },
+      "2ndWon": {
+        "ta": 21,
+        "sackmann": 21,
+        "exact": true
+      },
+      "SvGms": {
+        "ta": 16,
+        "sackmann": 16,
+        "exact": true
+      },
+      "bpSaved": {
+        "ta": 4,
+        "sackmann": 4,
+        "exact": true
+      },
+      "bpFaced": {
+        "ta": 7,
+        "sackmann": 7,
+        "exact": true
+      }
+    }
+  },
+  {
+    "tour": "ATP",
+    "player": "Tomas Machac",
+    "opponent": "Alexander Zverev",
+    "date": "2026-05-25",
+    "tournament": "Roland Garros",
+    "score": "6-4 6-2 6-2",
+    "all_exact": true,
+    "field_matches": {
+      "ace": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "df": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "svpt": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "1stIn": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "1stWon": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "2ndWon": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "SvGms": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "bpSaved": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "bpFaced": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      }
+    }
+  },
+  {
+    "tour": "ATP",
+    "player": "Tomas Machac",
+    "opponent": "Zizou Bergs",
+    "date": "2026-05-25",
+    "tournament": "Roland Garros",
+    "score": "6-4 6-4 6-3",
+    "all_exact": true,
+    "field_matches": {
+      "ace": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "df": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "svpt": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "1stIn": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "1stWon": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "2ndWon": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "SvGms": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "bpSaved": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "bpFaced": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      }
+    }
+  },
+  {
+    "tour": "ATP",
+    "player": "Tomas Machac",
+    "opponent": "Stefanos Tsitsipas",
+    "date": "2026-05-06",
+    "tournament": "Rome Masters",
+    "score": "6-4 7-6(4)",
+    "all_exact": true,
+    "field_matches": {
+      "ace": {
+        "ta": 3,
+        "sackmann": 3,
+        "exact": true
+      },
+      "df": {
+        "ta": 2,
+        "sackmann": 2,
+        "exact": true
+      },
+      "svpt": {
+        "ta": 67,
+        "sackmann": 67,
+        "exact": true
+      },
+      "1stIn": {
+        "ta": 46,
+        "sackmann": 46,
+        "exact": true
+      },
+      "1stWon": {
+        "ta": 42,
+        "sackmann": 42,
+        "exact": true
+      },
+      "2ndWon": {
+        "ta": 6,
+        "sackmann": 6,
+        "exact": true
+      },
+      "SvGms": {
+        "ta": 11,
+        "sackmann": 11,
+        "exact": true
+      },
+      "bpSaved": {
+        "ta": 1,
+        "sackmann": 1,
+        "exact": true
+      },
+      "bpFaced": {
+        "ta": 2,
+        "sackmann": 2,
+        "exact": true
+      }
+    }
+  },
+  {
+    "tour": "ATP",
+    "player": "Tomas Machac",
+    "opponent": "Cameron Norrie",
+    "date": "2026-04-22",
+    "tournament": "Madrid Masters",
+    "score": "6-2 6-7(6) 7-6(5)",
+    "all_exact": true,
+    "field_matches": {
+      "ace": {
+        "ta": 4,
+        "sackmann": 4,
+        "exact": true
+      },
+      "df": {
+        "ta": 5,
+        "sackmann": 5,
+        "exact": true
+      },
+      "svpt": {
+        "ta": 110,
+        "sackmann": 110,
+        "exact": true
+      },
+      "1stIn": {
+        "ta": 64,
+        "sackmann": 64,
+        "exact": true
+      },
+      "1stWon": {
+        "ta": 46,
+        "sackmann": 46,
+        "exact": true
+      },
+      "2ndWon": {
+        "ta": 24,
+        "sackmann": 24,
+        "exact": true
+      },
+      "SvGms": {
+        "ta": 16,
+        "sackmann": 16,
+        "exact": true
+      },
+      "bpSaved": {
+        "ta": 4,
+        "sackmann": 4,
+        "exact": true
+      },
+      "bpFaced": {
+        "ta": 7,
+        "sackmann": 7,
+        "exact": true
+      }
+    }
+  },
+  {
+    "tour": "WTA",
+    "player": "Iga Swiatek",
+    "opponent": "Belinda Bencic",
+    "date": "2026-01-05",
+    "tournament": "United Cup",
+    "score": "3-6 6-0 6-3",
+    "all_exact": true,
+    "field_matches": {
+      "ace": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "df": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "svpt": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "1stIn": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "1stWon": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "2ndWon": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "SvGms": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "bpSaved": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "bpFaced": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      }
+    }
+  },
+  {
+    "tour": "WTA",
+    "player": "Iga Swiatek",
+    "opponent": "Coco Gauff",
+    "date": "2026-01-05",
+    "tournament": "United Cup",
+    "score": "6-4 6-2",
+    "all_exact": true,
+    "field_matches": {
+      "ace": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "df": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "svpt": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "1stIn": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "1stWon": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "2ndWon": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "SvGms": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "bpSaved": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "bpFaced": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      }
+    }
+  },
+  {
+    "tour": "WTA",
+    "player": "Iga Swiatek",
+    "opponent": "Maya Joint",
+    "date": "2026-01-05",
+    "tournament": "United Cup",
+    "score": "6-1 6-1",
+    "all_exact": true,
+    "field_matches": {
+      "ace": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "df": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "svpt": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "1stIn": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "1stWon": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "2ndWon": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "SvGms": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "bpSaved": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "bpFaced": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      }
+    }
+  },
+  {
+    "tour": "WTA",
+    "player": "Iga Swiatek",
+    "opponent": "Eva Lys",
+    "date": "2026-01-05",
+    "tournament": "United Cup",
+    "score": "3-6 6-3 6-4",
+    "all_exact": true,
+    "field_matches": {
+      "ace": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "df": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "svpt": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "1stIn": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "1stWon": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "2ndWon": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "SvGms": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "bpSaved": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "bpFaced": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      }
+    }
+  },
+  {
+    "tour": "WTA",
+    "player": "Iga Swiatek",
+    "opponent": "Suzan Lamens",
+    "date": "2026-01-05",
+    "tournament": "United Cup",
+    "score": "6-3 6-2",
+    "all_exact": true,
+    "field_matches": {
+      "ace": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "df": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "svpt": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "1stIn": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "1stWon": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "2ndWon": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "SvGms": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "bpSaved": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "bpFaced": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      }
+    }
+  },
+  {
+    "tour": "WTA",
+    "player": "Aryna Sabalenka",
+    "opponent": "Marta Kostyuk",
+    "date": "2026-01-04",
+    "tournament": "Brisbane",
+    "score": "6-4 6-3",
+    "all_exact": true,
+    "field_matches": {
+      "ace": {
+        "ta": 1,
+        "sackmann": 1,
+        "exact": true
+      },
+      "df": {
+        "ta": 0,
+        "sackmann": 0,
+        "exact": true
+      },
+      "svpt": {
+        "ta": 52,
+        "sackmann": 52,
+        "exact": true
+      },
+      "1stIn": {
+        "ta": 32,
+        "sackmann": 32,
+        "exact": true
+      },
+      "1stWon": {
+        "ta": 26,
+        "sackmann": 26,
+        "exact": true
+      },
+      "2ndWon": {
+        "ta": 12,
+        "sackmann": 12,
+        "exact": true
+      },
+      "SvGms": {
+        "ta": 10,
+        "sackmann": 10,
+        "exact": true
+      },
+      "bpSaved": {
+        "ta": 2,
+        "sackmann": 2,
+        "exact": true
+      },
+      "bpFaced": {
+        "ta": 3,
+        "sackmann": 3,
+        "exact": true
+      }
+    }
+  },
+  {
+    "tour": "WTA",
+    "player": "Aryna Sabalenka",
+    "opponent": "Madison Keys",
+    "date": "2026-01-04",
+    "tournament": "Brisbane",
+    "score": "6-3 6-3",
+    "all_exact": true,
+    "field_matches": {
+      "ace": {
+        "ta": 5,
+        "sackmann": 5,
+        "exact": true
+      },
+      "df": {
+        "ta": 2,
+        "sackmann": 2,
+        "exact": true
+      },
+      "svpt": {
+        "ta": 65,
+        "sackmann": 65,
+        "exact": true
+      },
+      "1stIn": {
+        "ta": 36,
+        "sackmann": 36,
+        "exact": true
+      },
+      "1stWon": {
+        "ta": 26,
+        "sackmann": 26,
+        "exact": true
+      },
+      "2ndWon": {
+        "ta": 14,
+        "sackmann": 14,
+        "exact": true
+      },
+      "SvGms": {
+        "ta": 9,
+        "sackmann": 9,
+        "exact": true
+      },
+      "bpSaved": {
+        "ta": 3,
+        "sackmann": 3,
+        "exact": true
+      },
+      "bpFaced": {
+        "ta": 5,
+        "sackmann": 5,
+        "exact": true
+      }
+    }
+  },
+  {
+    "tour": "WTA",
+    "player": "Aryna Sabalenka",
+    "opponent": "Sorana Cirstea",
+    "date": "2026-01-04",
+    "tournament": "Brisbane",
+    "score": "6-3 6-3",
+    "all_exact": true,
+    "field_matches": {
+      "ace": {
+        "ta": 2,
+        "sackmann": 2,
+        "exact": true
+      },
+      "df": {
+        "ta": 1,
+        "sackmann": 1,
+        "exact": true
+      },
+      "svpt": {
+        "ta": 48,
+        "sackmann": 48,
+        "exact": true
+      },
+      "1stIn": {
+        "ta": 32,
+        "sackmann": 32,
+        "exact": true
+      },
+      "1stWon": {
+        "ta": 25,
+        "sackmann": 25,
+        "exact": true
+      },
+      "2ndWon": {
+        "ta": 8,
+        "sackmann": 8,
+        "exact": true
+      },
+      "SvGms": {
+        "ta": 9,
+        "sackmann": 9,
+        "exact": true
+      },
+      "bpSaved": {
+        "ta": 1,
+        "sackmann": 1,
+        "exact": true
+      },
+      "bpFaced": {
+        "ta": 2,
+        "sackmann": 2,
+        "exact": true
+      }
+    }
+  },
+  {
+    "tour": "WTA",
+    "player": "Aryna Sabalenka",
+    "opponent": "Cristina Bucsa",
+    "date": "2026-01-04",
+    "tournament": "Brisbane",
+    "score": "6-0 6-1",
+    "all_exact": true,
+    "field_matches": {
+      "ace": {
+        "ta": 4,
+        "sackmann": 4,
+        "exact": true
+      },
+      "df": {
+        "ta": 0,
+        "sackmann": 0,
+        "exact": true
+      },
+      "svpt": {
+        "ta": 36,
+        "sackmann": 36,
+        "exact": true
+      },
+      "1stIn": {
+        "ta": 28,
+        "sackmann": 28,
+        "exact": true
+      },
+      "1stWon": {
+        "ta": 22,
+        "sackmann": 22,
+        "exact": true
+      },
+      "2ndWon": {
+        "ta": 7,
+        "sackmann": 7,
+        "exact": true
+      },
+      "SvGms": {
+        "ta": 7,
+        "sackmann": 7,
+        "exact": true
+      },
+      "bpSaved": {
+        "ta": 0,
+        "sackmann": 0,
+        "exact": true
+      },
+      "bpFaced": {
+        "ta": 0,
+        "sackmann": 0,
+        "exact": true
+      }
+    }
+  },
+  {
+    "tour": "WTA",
+    "player": "Aryna Sabalenka",
+    "opponent": "Karolina Muchova",
+    "date": "2026-01-04",
+    "tournament": "Brisbane",
+    "score": "6-3 6-4",
+    "all_exact": true,
+    "field_matches": {
+      "ace": {
+        "ta": 9,
+        "sackmann": 9,
+        "exact": true
+      },
+      "df": {
+        "ta": 1,
+        "sackmann": 1,
+        "exact": true
+      },
+      "svpt": {
+        "ta": 64,
+        "sackmann": 64,
+        "exact": true
+      },
+      "1stIn": {
+        "ta": 41,
+        "sackmann": 41,
+        "exact": true
+      },
+      "1stWon": {
+        "ta": 36,
+        "sackmann": 36,
+        "exact": true
+      },
+      "2ndWon": {
+        "ta": 10,
+        "sackmann": 10,
+        "exact": true
+      },
+      "SvGms": {
+        "ta": 10,
+        "sackmann": 10,
+        "exact": true
+      },
+      "bpSaved": {
+        "ta": 4,
+        "sackmann": 4,
+        "exact": true
+      },
+      "bpFaced": {
+        "ta": 4,
+        "sackmann": 4,
+        "exact": true
+      }
+    }
+  },
+  {
+    "tour": "WTA",
+    "player": "Coco Gauff",
+    "opponent": "Jessica Bouzas Maneiro",
+    "date": "2026-01-05",
+    "tournament": "United Cup",
+    "score": "6-1 6-7(3) 6-0",
+    "all_exact": true,
+    "field_matches": {
+      "ace": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "df": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "svpt": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "1stIn": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "1stWon": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "2ndWon": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "SvGms": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "bpSaved": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "bpFaced": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      }
+    }
+  },
+  {
+    "tour": "WTA",
+    "player": "Coco Gauff",
+    "opponent": "Maria Sakkari",
+    "date": "2026-01-05",
+    "tournament": "United Cup",
+    "score": "6-3 6-2",
+    "all_exact": true,
+    "field_matches": {
+      "ace": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "df": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "svpt": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "1stIn": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "1stWon": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "2ndWon": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "SvGms": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "bpSaved": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "bpFaced": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      }
+    }
+  },
+  {
+    "tour": "WTA",
+    "player": "Coco Gauff",
+    "opponent": "Solana Sierra",
+    "date": "2026-01-05",
+    "tournament": "United Cup",
+    "score": "6-1 6-1",
+    "all_exact": true,
+    "field_matches": {
+      "ace": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "df": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "svpt": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "1stIn": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "1stWon": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "2ndWon": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "SvGms": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "bpSaved": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "bpFaced": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      }
+    }
+  },
+  {
+    "tour": "WTA",
+    "player": "Coco Gauff",
+    "opponent": "Iga Swiatek",
+    "date": "2026-01-05",
+    "tournament": "United Cup",
+    "score": "6-4 6-2",
+    "all_exact": true,
+    "field_matches": {
+      "ace": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "df": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "svpt": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "1stIn": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "1stWon": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "2ndWon": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "SvGms": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "bpSaved": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      },
+      "bpFaced": {
+        "ta": null,
+        "sackmann": null,
+        "exact": true
+      }
+    }
+  },
+  {
+    "tour": "WTA",
+    "player": "Coco Gauff",
+    "opponent": "Elina Svitolina",
+    "date": "2026-01-19",
+    "tournament": "Australian Open",
+    "score": "6-1 6-2",
+    "all_exact": true,
+    "field_matches": {
+      "ace": {
+        "ta": 0,
+        "sackmann": 0,
+        "exact": true
+      },
+      "df": {
+        "ta": 5,
+        "sackmann": 5,
+        "exact": true
+      },
+      "svpt": {
+        "ta": 43,
+        "sackmann": 43,
+        "exact": true
+      },
+      "1stIn": {
+        "ta": 32,
+        "sackmann": 32,
+        "exact": true
+      },
+      "1stWon": {
+        "ta": 13,
+        "sackmann": 13,
+        "exact": true
+      },
+      "2ndWon": {
+        "ta": 2,
+        "sackmann": 2,
+        "exact": true
+      },
+      "SvGms": {
+        "ta": 7,
+        "sackmann": 7,
+        "exact": true
+      },
+      "bpSaved": {
+        "ta": 1,
+        "sackmann": 1,
+        "exact": true
+      },
+      "bpFaced": {
+        "ta": 7,
+        "sackmann": 7,
+        "exact": true
+      }
+    }
+  },
+  {
+    "tour": "WTA",
+    "player": "Beatriz Haddad Maia",
+    "opponent": "Victoria Mboko",
+    "date": "2026-01-12",
+    "tournament": "Adelaide",
+    "score": "5-7 6-3 6-2",
+    "all_exact": true,
+    "field_matches": {
+      "ace": {
+        "ta": 2,
+        "sackmann": 2,
+        "exact": true
+      },
+      "df": {
+        "ta": 5,
+        "sackmann": 5,
+        "exact": true
+      },
+      "svpt": {
+        "ta": 87,
+        "sackmann": 87,
+        "exact": true
+      },
+      "1stIn": {
+        "ta": 49,
+        "sackmann": 49,
+        "exact": true
+      },
+      "1stWon": {
+        "ta": 31,
+        "sackmann": 31,
+        "exact": true
+      },
+      "2ndWon": {
+        "ta": 15,
+        "sackmann": 15,
+        "exact": true
+      },
+      "SvGms": {
+        "ta": 15,
+        "sackmann": 15,
+        "exact": true
+      },
+      "bpSaved": {
+        "ta": 1,
+        "sackmann": 1,
+        "exact": true
+      },
+      "bpFaced": {
+        "ta": 7,
+        "sackmann": 7,
+        "exact": true
+      }
+    }
+  },
+  {
+    "tour": "WTA",
+    "player": "Beatriz Haddad Maia",
+    "opponent": "Yulia Putintseva",
+    "date": "2026-01-19",
+    "tournament": "Australian Open",
+    "score": "3-6 7-5 6-3",
+    "all_exact": true,
+    "field_matches": {
+      "ace": {
+        "ta": 1,
+        "sackmann": 1,
+        "exact": true
+      },
+      "df": {
+        "ta": 7,
+        "sackmann": 7,
+        "exact": true
+      },
+      "svpt": {
+        "ta": 109,
+        "sackmann": 109,
+        "exact": true
+      },
+      "1stIn": {
+        "ta": 63,
+        "sackmann": 63,
+        "exact": true
+      },
+      "1stWon": {
+        "ta": 37,
+        "sackmann": 37,
+        "exact": true
+      },
+      "2ndWon": {
+        "ta": 21,
+        "sackmann": 21,
+        "exact": true
+      },
+      "SvGms": {
+        "ta": 15,
+        "sackmann": 15,
+        "exact": true
+      },
+      "bpSaved": {
+        "ta": 9,
+        "sackmann": 9,
+        "exact": true
+      },
+      "bpFaced": {
+        "ta": 15,
+        "sackmann": 15,
+        "exact": true
+      }
+    }
+  },
+  {
+    "tour": "WTA",
+    "player": "Beatriz Haddad Maia",
+    "opponent": "Dayana Yastremska",
+    "date": "2026-02-01",
+    "tournament": "Abu Dhabi",
+    "score": "6-2 7-5",
+    "all_exact": true,
+    "field_matches": {
+      "ace": {
+        "ta": 2,
+        "sackmann": 2,
+        "exact": true
+      },
+      "df": {
+        "ta": 10,
+        "sackmann": 10,
+        "exact": true
+      },
+      "svpt": {
+        "ta": 63,
+        "sackmann": 63,
+        "exact": true
+      },
+      "1stIn": {
+        "ta": 41,
+        "sackmann": 41,
+        "exact": true
+      },
+      "1stWon": {
+        "ta": 26,
+        "sackmann": 26,
+        "exact": true
+      },
+      "2ndWon": {
+        "ta": 7,
+        "sackmann": 7,
+        "exact": true
+      },
+      "SvGms": {
+        "ta": 10,
+        "sackmann": 10,
+        "exact": true
+      },
+      "bpSaved": {
+        "ta": 3,
+        "sackmann": 3,
+        "exact": true
+      },
+      "bpFaced": {
+        "ta": 8,
+        "sackmann": 8,
+        "exact": true
+      }
+    }
+  },
+  {
+    "tour": "WTA",
+    "player": "Beatriz Haddad Maia",
+    "opponent": "Janice Tjen",
+    "date": "2026-02-08",
+    "tournament": "Doha",
+    "score": "6-0 6-1",
+    "all_exact": true,
+    "field_matches": {
+      "ace": {
+        "ta": 2,
+        "sackmann": 2,
+        "exact": true
+      },
+      "df": {
+        "ta": 2,
+        "sackmann": 2,
+        "exact": true
+      },
+      "svpt": {
+        "ta": 42,
+        "sackmann": 42,
+        "exact": true
+      },
+      "1stIn": {
+        "ta": 30,
+        "sackmann": 30,
+        "exact": true
+      },
+      "1stWon": {
+        "ta": 15,
+        "sackmann": 15,
+        "exact": true
+      },
+      "2ndWon": {
+        "ta": 2,
+        "sackmann": 2,
+        "exact": true
+      },
+      "SvGms": {
+        "ta": 6,
+        "sackmann": 6,
+        "exact": true
+      },
+      "bpSaved": {
+        "ta": 5,
+        "sackmann": 5,
+        "exact": true
+      },
+      "bpFaced": {
+        "ta": 10,
+        "sackmann": 10,
+        "exact": true
+      }
+    }
+  },
+  {
+    "tour": "WTA",
+    "player": "Renata Zarazua",
+    "opponent": "Xin Yu Wang",
+    "date": "2026-01-05",
+    "tournament": "Auckland",
+    "score": "7-5 6-4",
+    "all_exact": true,
+    "field_matches": {
+      "ace": {
+        "ta": 0,
+        "sackmann": 0,
+        "exact": true
+      },
+      "df": {
+        "ta": 2,
+        "sackmann": 2,
+        "exact": true
+      },
+      "svpt": {
+        "ta": 77,
+        "sackmann": 77,
+        "exact": true
+      },
+      "1stIn": {
+        "ta": 51,
+        "sackmann": 51,
+        "exact": true
+      },
+      "1stWon": {
+        "ta": 29,
+        "sackmann": 29,
+        "exact": true
+      },
+      "2ndWon": {
+        "ta": 13,
+        "sackmann": 13,
+        "exact": true
+      },
+      "SvGms": {
+        "ta": 11,
+        "sackmann": 11,
+        "exact": true
+      },
+      "bpSaved": {
+        "ta": 6,
+        "sackmann": 6,
+        "exact": true
+      },
+      "bpFaced": {
+        "ta": 10,
+        "sackmann": 10,
+        "exact": true
+      }
+    }
+  },
+  {
+    "tour": "WTA",
+    "player": "Renata Zarazua",
+    "opponent": "Sloane Stephens",
+    "date": "2026-01-05",
+    "tournament": "Auckland",
+    "score": "7-5 4-6 6-2",
+    "all_exact": true,
+    "field_matches": {
+      "ace": {
+        "ta": 0,
+        "sackmann": 0,
+        "exact": true
+      },
+      "df": {
+        "ta": 1,
+        "sackmann": 1,
+        "exact": true
+      },
+      "svpt": {
+        "ta": 77,
+        "sackmann": 77,
+        "exact": true
+      },
+      "1stIn": {
+        "ta": 57,
+        "sackmann": 57,
+        "exact": true
+      },
+      "1stWon": {
+        "ta": 37,
+        "sackmann": 37,
+        "exact": true
+      },
+      "2ndWon": {
+        "ta": 11,
+        "sackmann": 11,
+        "exact": true
+      },
+      "SvGms": {
+        "ta": 15,
+        "sackmann": 15,
+        "exact": true
+      },
+      "bpSaved": {
+        "ta": 2,
+        "sackmann": 2,
+        "exact": true
+      },
+      "bpFaced": {
+        "ta": 6,
+        "sackmann": 6,
+        "exact": true
+      }
+    }
+  },
+  {
+    "tour": "WTA",
+    "player": "Renata Zarazua",
+    "opponent": "Iva Jovic",
+    "date": "2026-01-12",
+    "tournament": "Hobart",
+    "score": "6-1 6-2",
+    "all_exact": true,
+    "field_matches": {
+      "ace": {
+        "ta": 1,
+        "sackmann": 1,
+        "exact": true
+      },
+      "df": {
+        "ta": 1,
+        "sackmann": 1,
+        "exact": true
+      },
+      "svpt": {
+        "ta": 44,
+        "sackmann": 44,
+        "exact": true
+      },
+      "1stIn": {
+        "ta": 29,
+        "sackmann": 29,
+        "exact": true
+      },
+      "1stWon": {
+        "ta": 15,
+        "sackmann": 15,
+        "exact": true
+      },
+      "2ndWon": {
+        "ta": 6,
+        "sackmann": 6,
+        "exact": true
+      },
+      "SvGms": {
+        "ta": 7,
+        "sackmann": 7,
+        "exact": true
+      },
+      "bpSaved": {
+        "ta": 3,
+        "sackmann": 3,
+        "exact": true
+      },
+      "bpFaced": {
+        "ta": 7,
+        "sackmann": 7,
+        "exact": true
+      }
+    }
+  },
+  {
+    "tour": "WTA",
+    "player": "Renata Zarazua",
+    "opponent": "Hailey Baptiste",
+    "date": "2026-01-12",
+    "tournament": "Hobart",
+    "score": "6-7(5) 6-3 6-3",
+    "all_exact": true,
+    "field_matches": {
+      "ace": {
+        "ta": 1,
+        "sackmann": 1,
+        "exact": true
+      },
+      "df": {
+        "ta": 1,
+        "sackmann": 1,
+        "exact": true
+      },
+      "svpt": {
+        "ta": 106,
+        "sackmann": 106,
+        "exact": true
+      },
+      "1stIn": {
+        "ta": 83,
+        "sackmann": 83,
+        "exact": true
+      },
+      "1stWon": {
+        "ta": 58,
+        "sackmann": 58,
+        "exact": true
+      },
+      "2ndWon": {
+        "ta": 10,
+        "sackmann": 10,
+        "exact": true
+      },
+      "SvGms": {
+        "ta": 15,
+        "sackmann": 15,
+        "exact": true
+      },
+      "bpSaved": {
+        "ta": 7,
+        "sackmann": 7,
+        "exact": true
+      },
+      "bpFaced": {
+        "ta": 10,
+        "sackmann": 10,
+        "exact": true
+      }
+    }
+  }
+]

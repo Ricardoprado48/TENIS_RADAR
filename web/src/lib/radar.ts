@@ -33,8 +33,13 @@ export const DECISION_LABEL: Record<DecisionState, string> = {
   DESCARTADO: "Descartado",
 };
 
+export function formatLine(value: number | null | undefined): string {
+  if (value === null || value === undefined) return "?";
+  return String(value).replace(".", ",");
+}
+
 export function sideLabel(side: string): string {
-  return side === "over" ? "Over" : "Under";
+  return side.toLowerCase() === "over" ? "Mais de" : "Menos de";
 }
 
 export function formatProbability(value: number): string {

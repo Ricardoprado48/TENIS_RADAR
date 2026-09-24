@@ -1,4 +1,4 @@
-"""Testes do LOTE D (radar do dia, docs/018_PWA_ARQUITETURA.md): adapter
+﻿"""Testes do LOTE D (radar do dia, docs/018_PWA_ARQUITETURA.md): adapter
 `api/services/radar_service.py` sobre os outputs ja produzidos pela Fase 8
 (`data/outputs/phase8/*.parquet`) e o endpoint HTTP `GET /api/radar/today`.
 
@@ -167,6 +167,13 @@ def _write_calendar_csv(calendar_dir: Path) -> None:
             "event_timezone": "Asia/Shanghai", "source_url": "https://example.com",
             "collected_at": "2026-09-22T18:00:00Z",
         })
+        writer.writerow({
+            "tour": "WTA", "tournament": "Wuhan Open", "round": "QF",
+            "player_a_raw": "Iga Swiatek", "player_b_raw": "Aryna Sabalenka",
+            "surface": "Grass", "event_datetime_original": "2026-09-24T14:00:00",
+            "event_timezone": "Asia/Shanghai", "source_url": "https://example.com/wta",
+            "collected_at": "2026-09-22T18:00:00Z",
+        })
 
 
 def _fake_staleness_warning(tour: str) -> dict:
@@ -192,6 +199,10 @@ class RadarFixtureTestCase(unittest.TestCase):
             patch("src.calendar.config.CALENDAR_RAW_DIR", self.calendar_dir),
             patch("api.services.radar_service.pricing_compare.staleness_warning",
                   side_effect=_fake_staleness_warning),
+            patch(
+                "api.services.radar_service._now_utc",
+                return_value=pd.Timestamp("2026-09-23T04:00:00Z").to_pydatetime(),
+            ),
         ]
         for p in self._patchers:
             p.start()
@@ -294,10 +305,13 @@ class TestRadarLinesAdapter(RadarFixtureTestCase):
         line = next(l for l in lines if l.match_id == "FUTURE:ATP:0")
         self.assertIsNotNone(line.event_datetime_sao_paulo)
 
-    def test_event_datetime_sao_paulo_is_none_when_no_calendar_entry(self):
-        lines = radar_service.get_radar_lines()
-        line = next(l for l in lines if l.tour == "WTA")
-        self.assertIsNone(line.event_datetime_sao_paulo)
+    def test_match_without_calendar_entry_does_not_appear(self):
+        with patch(
+            "api.services.radar_service._active_calendar_datetimes_by_key",
+            return_value={},
+        ):
+            lines = radar_service.get_radar_lines()
+        self.assertEqual(lines, [])
 
     def test_unusable_match_never_appears(self):
         lines = radar_service.get_radar_lines()
@@ -335,12 +349,21 @@ class TestRadarLinesEmptyState(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
             phase8_dir = tmp_path / "phase8"
+            calendar_dir = tmp_path / "calendar"
+
             _write_fixture(phase8_dir)
+            _write_calendar_csv(calendar_dir)
+
             with patch("api.services.radar_service.radar_cfg.PHASE8_DIR", phase8_dir), \
-                 patch("src.calendar.config.CALENDAR_RAW_DIR", tmp_path / "no_calendar"), \
+                 patch("src.calendar.config.CALENDAR_RAW_DIR", calendar_dir), \
+                 patch(
+                     "api.services.radar_service._now_utc",
+                     return_value=pd.Timestamp("2026-09-23T04:00:00Z").to_pydatetime(),
+                 ), \
                  patch("api.services.radar_service.pricing_compare.staleness_warning",
                        side_effect=FileNotFoundError("base historica indisponivel no ambiente")):
                 lines = radar_service.get_radar_lines()
+
                 self.assertGreater(len(lines), 0)
                 self.assertTrue(all(l.staleness_status is None for l in lines))
 
@@ -373,6 +396,7 @@ class TestRadarTodayEndpoint(RadarFixtureTestCase):
                 "restricted_motivo", "extreme_probability", "identity_trusted",
                 "resolution_method_player", "resolution_method_opponent",
                 "staleness_status", "staleness_days", "historical_data_cutoff",
+                "effective_data_cutoff", "overlay_status",
             },
         )
 
@@ -398,3 +422,4 @@ class TestRadarTodayEmptyEndpoint(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
