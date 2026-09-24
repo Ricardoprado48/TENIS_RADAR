@@ -77,3 +77,11 @@ CANDIDATE_LABEL = "CANDIDATO PARA CONFERIR ODDS"
 CANDIDATE_SAMPLE_BUCKETS_OK = ["medium_10_49", "large_50_plus"]
 
 RANDOM_SEED = 20260922
+
+# Overrides mínimos e explícitos para identidades duplicadas na base canônica.
+# Usar somente quando a evidência local comprovar que mais de um player_id
+# representa o mesmo nome e apenas um deles possui o histórico usado pelo modelo.
+# Chave: (TOUR, nome normalizado) -> player_id canônico escolhido.
+PLAYER_IDENTITY_OVERRIDES = {
+    ("ATP", "jakub mensik"): "ATP-210150",
+}
