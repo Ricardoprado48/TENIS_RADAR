@@ -14,32 +14,26 @@ from typing import Any
 import pandas as pd
 
 from src.normalization.config import PROCESSED_DIRS
-from src.normalization.matches import OUTPUT_COLUMNS
 from . import config as cfg
+from .overlay_merge import write_overlay_atomic
 
 
 def get_overlay_path(tour: str) -> Path:
     return cfg.TA_OVERLAY_DIR / tour.lower() / "matches.parquet"
 
 
-def save_overlay_matches(tour: str, df: pd.DataFrame) -> Path:
+def save_overlay_matches(tour: str, df: pd.DataFrame, run_id: str | None = None) -> Path:
     """Salva partidas normalizadas no diretório isolado do overlay.
 
     NUNCA grava em `data/processed/{tour}/matches.parquet`.
-    Rejeita (ValueError, antes de qualquer escrita) DataFrame vazio ou com
-    colunas diferentes de `OUTPUT_COLUMNS` (mesmas colunas, mesma ordem).
+    Delegado a `overlay_merge.write_overlay_atomic`: rejeita (ValueError,
+    antes de qualquer escrita) DataFrame vazio, colunas diferentes de
+    `OUTPUT_COLUMNS` (mesmas colunas, mesma ordem), chave (match_id,
+    player_id) duplicada, partida sem exatamente 2 linhas e qualquer escrita
+    que removeria linhas já existentes. Escrita atômica com backup em
+    `versions/`. Para incorporar coletas novas use `overlay_merge.merge_and_save`.
     """
-    if df.empty:
-        raise ValueError(f"overlay {tour}: DataFrame vazio, nada gravado")
-    if list(df.columns) != OUTPUT_COLUMNS:
-        raise ValueError(
-            f"overlay {tour}: schema inválido, esperado OUTPUT_COLUMNS "
-            f"({len(OUTPUT_COLUMNS)} colunas), recebido {list(df.columns)[:10]}"
-        )
-    path = get_overlay_path(tour)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    df.to_parquet(path, index=False)
-    return path
+    return write_overlay_atomic(tour, df, run_id)["path"]
 
 
 def load_overlay_matches(tour: str) -> pd.DataFrame:
