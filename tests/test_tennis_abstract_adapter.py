@@ -12,6 +12,7 @@ import pandas as pd
 
 from src.incremental import config as inc_cfg
 from src.incremental import identity_new as ident_new
+from src.incremental import ta_identity
 from src.incremental.tennis_abstract_adapter import (
     AcceptancePolicy,
     CollectedPlayer,
@@ -30,6 +31,12 @@ ALCARAZ_CACHE = inc_cfg.TA_CACHE_DIR / "ATP" / "CarlosAlcaraz.json"
 
 def _players_atp() -> pd.DataFrame:
     return pd.read_parquet(PROCESSED_DIRS["atp"] / "players.parquet")
+
+
+def _verified(payload: dict) -> dict:
+    """Carimba identidade VERIFIED (a verificação em si é testada em test_ta_identity)."""
+    pid = payload["player"].get("player_id")
+    return {**payload, "identity": {"player_id": pid, "identity_status": "VERIFIED"}}
 
 
 def _row(**kwargs) -> dict[str, str]:
@@ -62,7 +69,7 @@ class TestAdapterHardening(unittest.TestCase):
 
     def _process(self, payloads, **kwargs):
         return process_tennis_abstract_matches(
-            payloads, "ATP", cutoff_date="2026-05-25", players_df=self.players, policy=self.policy, **kwargs,
+            [_verified(p) for p in payloads], "ATP", cutoff_date="2026-05-25", players_df=self.players, policy=self.policy, **kwargs,
         )
 
     # --- matchid ---
@@ -187,6 +194,42 @@ class TestAdapterHardening(unittest.TestCase):
         self.assertEqual(res["valid_count"], 0)
         self.assertEqual(res["rejected_reasons"], {"UNKNOWN_PLAYER_ID": 1})
 
+    # --- gate de identidade (T4) ---
+    def test_identity_not_verified_blocks_all_matches(self) -> None:
+        base = {"player": {"tour": "ATP", "player_id": ALCARAZ_ID}, "matches": [_row()]}
+        cases = {
+            None: "IDENTITY_NOT_VERIFIED:MISSING",
+            "INSUFFICIENT_EVIDENCE": "IDENTITY_NOT_VERIFIED:INSUFFICIENT_EVIDENCE",
+            "MISMATCH": "IDENTITY_NOT_VERIFIED:MISMATCH",
+            "NO_PLAYER_DATA": "IDENTITY_NOT_VERIFIED:NO_PLAYER_DATA",
+        }
+        for status, reason in cases.items():
+            payload = dict(base)
+            if status:
+                payload["identity"] = {"player_id": ALCARAZ_ID, "identity_status": status}
+            res = process_tennis_abstract_matches([payload], "ATP", cutoff_date="2026-05-25",
+                                                  players_df=self.players, policy=self.policy)
+            self.assertEqual(res["valid_count"], 0, status)
+            self.assertTrue(res["transformed_df"].empty, status)
+            self.assertEqual(res["rejected_reasons"], {reason: 1}, status)
+
+    def test_identity_verified_for_other_player_blocks(self) -> None:
+        payload = {"player": {"tour": "ATP", "player_id": ALCARAZ_ID}, "matches": [_row()],
+                   "identity": {"player_id": SINNER_ID, "identity_status": "VERIFIED"}}
+        res = process_tennis_abstract_matches([payload], "ATP", cutoff_date="2026-05-25",
+                                              players_df=self.players, policy=self.policy)
+        self.assertEqual(res["rejected_reasons"], {"IDENTITY_NOT_VERIFIED:PLAYER_ID_MISMATCH": 1})
+
+    def test_unverified_page_does_not_fill_opponent_id(self) -> None:
+        a = _verified({"player": {"tour": "ATP", "player_id": ALCARAZ_ID},
+                       "matches": [_row(wl="W", opp="Zzz Irreconhecivel")]})
+        b = {"player": {"tour": "ATP", "player_id": SINNER_ID},
+             "matches": [_row(wl="L", opp="Carlos Alcaraz")],
+             "identity": {"player_id": SINNER_ID, "identity_status": "MISMATCH"}}
+        t = process_tennis_abstract_matches([a, b], "ATP", cutoff_date="2026-05-25",
+                                            players_df=self.players, policy=self.policy)["transformed_df"]
+        self.assertNotIn(SINNER_ID, set(t["player_id"]))
+
     def test_fuzzy_review_not_counted_as_resolved(self) -> None:
         toy = pd.DataFrame({
             "player_id": ["ATP-1"], "player_id_raw": ["1"], "name": ["Jelena Ostapenko"],
@@ -264,6 +307,11 @@ class TestAdapterOnRealCache(unittest.TestCase):
     def test_alcaraz_post_cutoff_matches(self) -> None:
         payload = json.loads(ALCARAZ_CACHE.read_text(encoding="utf-8"))
         payload["player"]["player_id"] = ALCARAZ_ID
+        verification = ta_identity.verify_identity(
+            ALCARAZ_ID, payload, ta_identity.load_identity_history("ATP"), load_acceptance_policy("ATP"),
+        )
+        self.assertEqual(verification["identity_status"], "VERIFIED")
+        payload = ta_identity.attach_identity(payload, verification)
         res = process_tennis_abstract_matches([payload], "ATP", cutoff_date="2026-05-25",
                                               players_df=_players_atp())
         t = res["transformed_df"]

@@ -13,6 +13,8 @@ campo também é opcional no Sackmann, como `minutes` e `rank`).
 
 O jogador coletado chega com `player_id` conhecido (`payload["player"]["player_id"]`)
 e nunca é re-resolvido por nome; só o adversário é resolvido (exact/alias).
+Gate de identidade (T4): só entram partidas de payloads cuja verificação
+(`payload["identity"]`, ver `ta_identity`) é VERIFIED para esse mesmo player_id.
 """
 
 from __future__ import annotations
@@ -34,6 +36,7 @@ CRITICAL_STAT_FIELDS = [
 
 VALID_BEST_OF = (3, 5)
 COLLECTED_METHOD = "collected_player_id"
+IDENTITY_VERIFIED = "VERIFIED"  # = ta_identity.VERIFIED (sem import: evita ciclo)
 
 
 @dataclass(frozen=True)
@@ -221,6 +224,18 @@ def _collected_player(p_info: dict, players_idx: pd.DataFrame) -> CollectedPlaye
     return CollectedPlayer(player_id=pid, name=str(rec["name"]), hand=None if pd.isna(hand) else str(hand))
 
 
+def _identity_block_reason(payload: dict, p_info: dict) -> str | None:
+    """None se a identidade da página foi VERIFIED para o player_id do payload;
+    senão o motivo de rejeição `IDENTITY_NOT_VERIFIED:<status>`."""
+    identity = payload.get("identity") or {}
+    status = identity.get("identity_status")
+    if status == IDENTITY_VERIFIED and identity.get("player_id") == p_info.get("player_id"):
+        return None
+    if status == IDENTITY_VERIFIED:
+        return "IDENTITY_NOT_VERIFIED:PLAYER_ID_MISMATCH"
+    return f"IDENTITY_NOT_VERIFIED:{status or 'MISSING'}"
+
+
 def _resolve_opponents(raw_df: pd.DataFrame, players_df: pd.DataFrame) -> pd.DataFrame:
     """Preenche o lado do adversário ainda sem id: exact/alias usam o id e a mão
     da base; fuzzy_review/unresolved recebem id `NEW-` (identity_new) e ficam
@@ -249,8 +264,8 @@ def process_tennis_abstract_matches(
     policy: AcceptancePolicy | None = None,
 ) -> dict[str, Any]:
     """Recebe payloads de jogadores do Tennis Abstract (cada um com
-    `player.player_id`), filtra pós-cutoff, valida, deduplica por `match_id`
-    e normaliza no schema Sackmann.
+    `player.player_id` e `identity` VERIFIED), filtra pós-cutoff, valida,
+    deduplica por `match_id` e normaliza no schema Sackmann.
 
     Retorna também `per_player`: {player_id: {n_post_cutoff, n_valid,
     n_duplicate, rejected_reasons}} para a freshness por jogador (T7)."""
@@ -281,6 +296,7 @@ def process_tennis_abstract_matches(
             key, {"n_post_cutoff": 0, "n_valid": 0, "n_duplicate": 0, "rejected_reasons": {}},
         )
         player = _collected_player(p_info, players_idx)
+        identity_block = _identity_block_reason(payload, p_info)
 
         for m in payload.get("matches", []):
             dt_int = _safe_int(m.get("date"))
@@ -291,6 +307,9 @@ def process_tennis_abstract_matches(
             stats["n_post_cutoff"] += 1
             if player is None:
                 _reject(stats, "UNKNOWN_PLAYER_ID")
+                continue
+            if identity_block is not None:
+                _reject(stats, identity_block)
                 continue
 
             row, status = parse_ta_match_row(m, player, tour_clean, policy)

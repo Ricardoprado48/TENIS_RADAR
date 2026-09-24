@@ -48,6 +48,7 @@ from src.incremental.config import (
 )
 from src.incremental.tennis_abstract_source import (
     AccessForbiddenError,
+    HttpResponse,
     MATCHHEAD_COLUMNS,
     PlayerNotFoundError,
     RateLimitError,
@@ -179,29 +180,32 @@ class TestTennisAbstractOverlay(unittest.TestCase):
         </body></html>
         """
         source = TennisAbstractSource(cache_dir=self.cache_dir, delay_seconds=0.0)
-        with mock.patch.object(source, "_http_get", return_value=(200, html)):
+        with mock.patch.object(source, "_http_get", return_value=HttpResponse(200, html)):
             data = source.fetch_player_matches("Carlos Alcaraz", "ATP")
             self.assertEqual(data["total_matches"], 1)
             self.assertEqual(data["matches"][0]["tourn"], "Roland Garros")
             self.assertEqual(data["matches"][0]["aces"], "8")
 
-    # 2. parsing WTA
-    def test_02_parsing_wta_external_script(self) -> None:
-        html = '<html><head><script src="https://www.tennisabstract.com/jsmatches/IgaSwiatek.js"></script></head></html>'
-        js_code = 'var matchmx = [["20260608","Roland Garros","Clay","G","W","1","","","F","6-2 6-1","","Jasmine Paolini","15","","","R","1996-01-10","163","ITA","active","68","1","0","50","35","28","10","8","1","1","0","2","48","28","14","6","7","2","6","R","","","","2026-800-127","","7","127"]];'
-
+    # 2. parsing WTA (página principal inline; nenhuma URL secundária /jsmatches/)
+    def test_02_parsing_wta_inline_and_no_external_script_fetch(self) -> None:
+        js_row = '["20260608","Roland Garros","Clay","G","W","1","","","F","6-2 6-1","","Jasmine Paolini","15","","","R","1996-01-10","163","ITA","active","68","1","0","50","35","28","10","8","1","1","0","2","48","28","14","6","7","2","6","R","","","","2026-800-127","","7","127"]'
+        html = f"<html><script>var fullname = 'Iga Swiatek'; var matchmx = [{js_row}];</script></html>"
         source = TennisAbstractSource(cache_dir=self.cache_dir, delay_seconds=0.0)
-
-        def mock_get(url: str):
-            if "jsmatches" in url:
-                return 200, js_code
-            return 200, html
-
-        with mock.patch.object(source, "_http_get", side_effect=mock_get):
+        with mock.patch.object(source, "_http_get", return_value=HttpResponse(200, html)) as mock_get:
             data = source.fetch_player_matches("Iga Swiatek", "WTA")
-            self.assertEqual(data["total_matches"], 1)
-            self.assertEqual(data["matches"][0]["opp"], "Jasmine Paolini")
-            self.assertEqual(data["matches"][0]["saved"], "1")
+        self.assertEqual(data["total_matches"], 1)
+        self.assertEqual(data["matches"][0]["opp"], "Jasmine Paolini")
+        self.assertEqual(data["matches"][0]["saved"], "1")
+        self.assertIn("wplayer-classic.cgi", mock_get.call_args[0][0])
+
+        # página que só referencia jsmatches externo: 1 requisição, sem fallback
+        ext = '<html><head><script src="https://www.tennisabstract.com/jsmatches/IgaSwiatek.js"></script></head></html>'
+        source = TennisAbstractSource(cache_dir=self.cache_dir, delay_seconds=0.0)
+        with mock.patch.object(source, "_http_get", return_value=HttpResponse(200, ext)) as mock_get:
+            with self.assertRaises(PlayerNotFoundError):
+                source.fetch_player_matches("Iga Swiatek", "WTA", force_refresh=True)
+        mock_get.assert_called_once()
+        self.assertNotIn("jsmatches", mock_get.call_args[0][0])
 
     # 3. 9 campos
     def test_03_all_nine_critical_fields_mapped(self) -> None:
@@ -284,7 +288,7 @@ class TestTennisAbstractOverlay(unittest.TestCase):
         cache_file.write_text(json.dumps(payload), encoding="utf-8")
 
         html = 'var matchmx = [["20260615","Halle","Grass","A","W","2","","","F","6-4 6-3","","Jannik Sinner","1","","","R","2001-08-16","188","ITA","active","90","5","1","60","40","32","12","9","2","2","8","2","65","45","30","10","9","3","5","R","","","","2026-500-101","","7","101"]];'
-        with mock.patch.object(source, "_http_get", return_value=(200, html)) as mock_get:
+        with mock.patch.object(source, "_http_get", return_value=HttpResponse(200, html)) as mock_get:
             res = source.fetch_player_matches("Carlos Alcaraz", "ATP")
             self.assertFalse(res["cache_hit"])
             mock_get.assert_called_once()
@@ -304,23 +308,26 @@ class TestTennisAbstractOverlay(unittest.TestCase):
     # 8. HTTP 429
     def test_08_http_429_raises_rate_limit_error(self) -> None:
         source = TennisAbstractSource(cache_dir=self.cache_dir, delay_seconds=0.0)
-        with mock.patch.object(source, "_http_get", return_value=(429, "")):
-            with self.assertRaises(RateLimitError):
+        with mock.patch.object(source, "_http_get", return_value=HttpResponse(429, "", {"retry-after": "10"})):
+            with self.assertRaises(RateLimitError) as ctx:
                 source.fetch_player_matches("Carlos Alcaraz", "ATP")
+        self.assertEqual(ctx.exception.retry_after, "10")
 
     # 9. HTTP 403
     def test_09_http_403_raises_access_forbidden(self) -> None:
         source = TennisAbstractSource(cache_dir=self.cache_dir, delay_seconds=0.0)
-        with mock.patch.object(source, "_http_get", return_value=(403, "")):
+        with mock.patch.object(source, "_http_get", return_value=HttpResponse(403, "")):
             with self.assertRaises(AccessForbiddenError):
                 source.fetch_player_matches("Carlos Alcaraz", "ATP")
 
-    # 10. jogador inexistente
+    # 10. jogador inexistente: HTTP 200 + página modelo sem fullname/matchmx (T2)
     def test_10_missing_player_raises_player_not_found(self) -> None:
         source = TennisAbstractSource(cache_dir=self.cache_dir, delay_seconds=0.0)
-        with mock.patch.object(source, "_http_get", return_value=(404, "")):
+        template = "<html><title>Tennis Abstract: onExistentPlayer123 Match Results</title></html>"
+        with mock.patch.object(source, "_http_get", return_value=HttpResponse(200, template)):
             with self.assertRaises(PlayerNotFoundError):
                 source.fetch_player_matches("NonExistentPlayer123", "ATP")
+        self.assertFalse(any(self.cache_dir.rglob("*.json")))  # página modelo não vai ao cache
 
     # 11. schema inesperado
     def test_11_malformed_matrix_returns_empty_without_crash(self) -> None:
@@ -399,6 +406,8 @@ class TestTennisAbstractOverlay(unittest.TestCase):
             "player": {"name": "Hubert Hurkacz", "tour": "ATP", "player_id": HURKACZ_ID},
             "matches": [_make_sample_matchhead_row(wl="L", opp="Carlos Alcaraz", aces="15", oaces="12")],
         }
+        p1["identity"] = {"player_id": ALCARAZ_ID, "identity_status": "VERIFIED"}
+        p2["identity"] = {"player_id": HURKACZ_ID, "identity_status": "VERIFIED"}
         res = process_tennis_abstract_matches([p1, p2], "ATP", cutoff_date="2026-05-25", policy=self.atp_policy)
         # Deve incorporar apenas 1 partida física única (que vira 2 perspectivas normalizadas)
         self.assertEqual(res["valid_count"], 1)
