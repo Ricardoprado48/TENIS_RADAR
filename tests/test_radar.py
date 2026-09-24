@@ -56,6 +56,42 @@ class TestIdentityResolution(unittest.TestCase):
         self.assertEqual(res.method, "unresolved")
         self.assertIsNone(res.player_id)
 
+    def test_compact_name_alias_resolves_spacing_difference(self):
+        players = pd.DataFrame({
+            "player_id": ["WTA-1"],
+            "name": ["Xin Yu Wang"],
+            "name_first": ["Xin Yu"],
+            "name_last": ["Wang"],
+        })
+        idx = ident.PlayerIndex(players, tour="WTA")
+        res = idx.resolve("Xinyu Wang")
+        self.assertEqual(res.method, "alias")
+        self.assertEqual(res.player_id, "WTA-1")
+
+    def test_token_order_alias_resolves_same_name_components(self):
+        players = pd.DataFrame({
+            "player_id": ["WTA-1"],
+            "name": ["Elena Gabriela Ruse"],
+            "name_first": ["Elena Gabriela"],
+            "name_last": ["Ruse"],
+        })
+        idx = ident.PlayerIndex(players, tour="WTA")
+        res = idx.resolve("Gabriela Elena Ruse")
+        self.assertEqual(res.method, "alias")
+        self.assertEqual(res.player_id, "WTA-1")
+
+    def test_duplicate_exact_name_uses_explicit_canonical_override(self):
+        players = pd.DataFrame({
+            "player_id": ["ATP-210150", "ATP-210084"],
+            "name": ["Jakub Mensik", "Jakub Mensik"],
+            "name_first": ["Jakub", "Jakub"],
+            "name_last": ["Mensik", "Mensik"],
+        })
+        idx = ident.PlayerIndex(players, tour="ATP")
+        res = idx.resolve("Jakub Menšik")
+        self.assertEqual(res.method, "alias")
+        self.assertEqual(res.player_id, "ATP-210150")
+
     def test_unresolved_when_alias_ambiguous(self):
         # "E. Andreeva" x "E. Andreychuk" -- ambos comecam com "E" e a
         # heuristica de sobrenome so bate se ambos tiverem o MESMO
